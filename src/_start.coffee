@@ -1,4 +1,5 @@
 #--- Concatened ---
+DOM = {}
 if module?
   module.exports = DOM
 else 

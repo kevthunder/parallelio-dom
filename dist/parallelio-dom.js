@@ -1,4 +1,8 @@
 (function() {
+  var DOM;
+
+  DOM = {};
+
   if (typeof module !== "undefined" && module !== null) {
     module.exports = DOM;
   } else {
