@@ -1,0 +1,9 @@
+.tile {
+  position: absolute;
+  background: #333;
+  width: 19px;
+  height: 19px; }
+  .tile.wall {
+    background: #222; }
+  .tile.floor {
+    background: #444; }

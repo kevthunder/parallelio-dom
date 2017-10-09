@@ -5,6 +5,8 @@ var uglify = require('gulp-uglify');
 var concat = require('gulp-coffeescript-concat');
 var stripCode = require('gulp-strip-code');
 var mocha = require('gulp-mocha');
+var sass = require('gulp-sass');
+var TestServer = require('karma').Server;
 
 gulp.task('coffee', function() {
   return gulp.src(['./src/*.coffee', '!./src/_*.coffee'])
@@ -39,19 +41,34 @@ gulp.task('compress', ['concatCoffee'], function () {
     .pipe(gulp.dest('./dist/'));
 });
 
+gulp.task('sass', function () {
+  return gulp.src('./sass/parallelio-dom.sass')
+    .pipe(sass().on('error', sass.logError))
+    .pipe(gulp.dest('./css'));
+});
+
 gulp.task('coffeeTest', function() {
   return gulp.src('./test/src/*.coffee')
     .pipe(coffee())
     .pipe(gulp.dest('./test/'));
 });
 
-gulp.task('build', ['coffee', 'concatCoffee', 'compress'], function () {
+gulp.task('build', ['sass', 'coffee', 'concatCoffee', 'compress'], function () {
     console.log('Build Complete');
 });
 
-gulp.task('test', ['coffee','coffeeTest'], function() {
-  return gulp.src('./test/tests.js')
-    .pipe(mocha());
+gulp.task('test', ['build','coffeeTest'], function(done) {
+  new TestServer({
+    configFile: __dirname + '/karma.conf.js',
+    singleRun: true
+  }, done).start();
+});
+
+gulp.task('test-debug', ['build','coffeeTest'], function(done) {
+  new TestServer({
+    configFile: __dirname + '/karma.conf.js',
+    singleRun: false
+  }, done).start();
 });
 
 gulp.task('default', ['build']);

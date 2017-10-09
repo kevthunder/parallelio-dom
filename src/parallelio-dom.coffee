@@ -1,6 +1,8 @@
+#= require <View>
 
 #--- Standalone ---
 if module?
   module.exports = {
+    
   }
 #--- Standalone end ---
