@@ -10,12 +10,17 @@ DefaultGenerator = @Parallelio?.RoomGenerator || require('parallelio').RoomGener
 Ship = {}
 class Ship.Tiled extends TileContainer
   @include EventEmitter.prototype
+  init: ->
+    super()
+    @displayContainer
+
   @properties
     container: {}
     displayContainer:
       calcul: (invalidator) ->
         container = invalidator.prop('container')
-        container.display || container
+        if container?.getProperty('display')
+          container.display
       change: ->
         if @displayContainer?
           @display.appendTo(@displayContainer)

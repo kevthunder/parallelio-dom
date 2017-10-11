@@ -157,7 +157,7 @@
 
     Tile.prototype.init = function() {
       Tile.__super__.init.call(this);
-      return this.containerDisplay = $('#TileContainer');
+      return this.displayContainer;
     };
 
     Tile.properties({
@@ -239,13 +239,20 @@
 
     Tiled.include(EventEmitter.prototype);
 
+    Tiled.prototype.init = function() {
+      Tiled.__super__.init.call(this);
+      return this.displayContainer;
+    };
+
     Tiled.properties({
       container: {},
       displayContainer: {
         calcul: function(invalidator) {
           var container;
           container = invalidator.prop('container');
-          return container.display || container;
+          if (container != null ? container.getProperty('display') : void 0) {
+            return container.display;
+          }
         },
         change: function() {
           if (this.displayContainer != null) {

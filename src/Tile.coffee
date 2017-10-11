@@ -5,7 +5,7 @@ class Tile extends BaseTile
   @size: 20
   init: ->
     super()
-    @containerDisplay = $('#TileContainer')
+    @displayContainer
   @properties
     container: {}
     displayContainer:
