@@ -1,4 +1,4 @@
-BaseTile = @Parallelio?.Tile || require('parallelio').Tile
+BaseTile = require('parallelio').Tile
 
 class Tile extends BaseTile
   @include EventEmitter.prototype
@@ -39,18 +39,3 @@ class Tile extends BaseTile
     @tileToDisplayPos(@x, @y)
   tileToDisplayPos: (x, y) ->
     x:x*Tile.size, y:y*Tile.size
-
-
-
-if DOM?
-  DOM.Tile = Tile
-#--- Standalone ---
-if module?
-  module.exports = Tile
-else
-  unless @Parallelio?
-    @Parallelio = {}
-  unless @Parallelio.DOM?
-    @Parallelio.DOM = {}
-  @Parallelio.DOM.Tile = Tile
-#--- Standalone end ---

@@ -1,4 +1,4 @@
-Element = @Parallelio?.Element || require('spark-starter').Element
+Element = require('parallelio').Element
 
 class View extends Element
   constructor: (@display = null) ->
@@ -60,17 +60,3 @@ class View extends Element
       y -= container.offsetTop;
       container = container.offsetParent
     0 <= x <= @display.width() and 0 <= y <= @display.height()
-
-
-if DOM?
-  DOM.View = View
-#--- Standalone ---
-if module?
-  module.exports = View
-else
-  unless @Parallelio?
-    @Parallelio = {}
-  unless @Parallelio.DOM?
-    @Parallelio.DOM = {}
-  @Parallelio.DOM.View = View
-#--- Standalone end ---

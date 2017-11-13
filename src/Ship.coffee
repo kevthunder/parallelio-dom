@@ -1,11 +1,6 @@
-#= require <Tile>
-#--- Standalone ---
-Tile = @DOM?.Tile || require('./Tile').Element
-#--- Standalone end ---
-TileContainer = @Parallelio?.TileContainer || require('parallelio').TileContainer
-DefaultGenerator = @Parallelio?.RoomGenerator || require('parallelio').RoomGenerator
-
-
+Tile = require('./Tile')
+TileContainer = require('parallelio').TileContainer
+DefaultGenerator = require('parallelio').RoomGenerator
 
 Ship = {}
 class Ship.Tiled extends TileContainer
@@ -42,16 +37,3 @@ class Ship.Tiled extends TileContainer
           @walkable = true
     generator.getTiles().forEach (tile)=>
       @addTile(tile)
-
-if DOM?
-  DOM.Ship = Ship
-#--- Standalone ---
-if module?
-  module.exports = Ship
-else
-  unless @Parallelio?
-    @Parallelio = {}
-  unless @Parallelio.DOM?
-    @Parallelio.DOM = {}
-  @Parallelio.DOM.Ship = Ship
-#--- Standalone end ---
