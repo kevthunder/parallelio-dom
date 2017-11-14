@@ -12,8 +12,8 @@ var TestServer = require('karma').Server;
 gulp.task('coffee', function() {
   return gulp.src(['./src/*.coffee'])
     .pipe(coffee({bare: true}))
-    .pipe(wrapper({namespace:'Parallelio'}))
-    .pipe(wrapper.loader({namespace:'Parallelio'}))
+    .pipe(wrapper({namespace:'Parallelio.DOM'}))
+    .pipe(wrapper.loader({namespace:'Parallelio.DOM','filename':'parallelio-dom'}))
     .pipe(gulp.dest('./lib/'));
 });
 
@@ -21,7 +21,7 @@ gulp.task('concat', function() {
   return gulp.src([
     './src/*.coffee'
   ])
-    .pipe(wrapper.compose({namespace:'Parallelio.DOM'}))
+    .pipe(wrapper.compose({namespace:'Parallelio.DOM',aliases:{'parallelio':'Parallelio'}}))
     .pipe(concat('parallelio-dom.coffee'))
     .pipe(gulp.dest('./tmp/'));
 });
@@ -60,6 +60,11 @@ gulp.task('test', ['build','coffeeTest'], function(done) {
     configFile: __dirname + '/karma.conf.js',
     singleRun: true
   }, done).start();
+});
+
+gulp.task('test-exit', ['test'], function() {
+  console.log('Everithing is done, closing process');
+  process.exit();
 });
 
 gulp.task('test-debug', ['build','coffeeTest'], function(done) {
