@@ -32,10 +32,18 @@ gulp.task('concatCoffee', ['concat'], function() {
     .pipe(gulp.dest('./dist/'));
 });
 
-gulp.task('compress', ['concatCoffee'], function () {
-  return gulp.src('./dist/parallelio-dom.js')
+gulp.task('full', ['concatCoffee'], function () {
+  return gulp.src([require.resolve('parallelio/dist/parallelio.js'),'./dist/parallelio-dom.js'])
+    .pipe(concat('parallelio-and-dom.js'))
+    .pipe(gulp.dest('./dist/'));
+});
+
+gulp.task('compress', ['full'], function () {
+  return gulp.src(['./dist/parallelio-dom.js','./dist/parallelio-and-dom.js'])
     .pipe(uglify())
-    .pipe(rename('parallelio-dom.min.js'))
+    .pipe(rename({
+          suffix: '.min',
+        }))
     .pipe(gulp.dest('./dist/'));
 });
 
