@@ -1,12 +1,13 @@
 (function() {
-  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  var DOM,
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  Parallelio.DOM = {};
+  DOM = typeof module !== "undefined" && module !== null ? module.exports = {} : (this.Parallelio == null ? this.Parallelio = {} : void 0, this.Parallelio.DOM == null ? this.Parallelio.DOM = {} : void 0, this.Parallelio.DOM);
 
   (function(definition) {
-    Parallelio.DOM.Tile = definition();
-    return Parallelio.DOM.Tile.definition = definition;
+    DOM.Tile = definition();
+    return DOM.Tile.definition = definition;
   })(function(dependencies) {
     var BaseTile, Tile;
     if (dependencies == null) {
@@ -92,14 +93,14 @@
   });
 
   (function(definition) {
-    Parallelio.DOM.Ship = definition();
-    return Parallelio.DOM.Ship.definition = definition;
+    DOM.Ship = definition();
+    return DOM.Ship.definition = definition;
   })(function(dependencies) {
     var DefaultGenerator, Ship, Tile, TileContainer;
     if (dependencies == null) {
       dependencies = {};
     }
-    Tile = dependencies.hasOwnProperty("Tile") ? dependencies.Tile : Parallelio.DOM.Tile;
+    Tile = dependencies.hasOwnProperty("Tile") ? dependencies.Tile : DOM.Tile;
     TileContainer = dependencies.hasOwnProperty("TileContainer") ? dependencies.TileContainer : Parallelio.TileContainer;
     DefaultGenerator = dependencies.hasOwnProperty("DefaultGenerator") ? dependencies.DefaultGenerator : Parallelio.RoomGenerator;
     Ship = {};
@@ -172,8 +173,8 @@
   });
 
   (function(definition) {
-    Parallelio.DOM.View = definition();
-    return Parallelio.DOM.View.definition = definition;
+    DOM.View = definition();
+    return DOM.View.definition = definition;
   })(function(dependencies) {
     var Element, View;
     if (dependencies == null) {
@@ -306,11 +307,5 @@
     })(Element);
     return View;
   });
-
-  if (typeof module !== "undefined" && module !== null) {
-    module.exports = Parallelio.DOM;
-  } else {
-    this.Parallelio.DOM = Parallelio.DOM;
-  }
 
 }).call(this);

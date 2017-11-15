@@ -18,8 +18,7 @@ module.exports = function(config) {
       'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js',
       'http://npmcdn.com/wolfy87-eventemitter@5.0.0/EventEmitter.min.js',
       'css/parallelio-dom.css',
-      'node_modules/parallelio/dist/parallelio.js',
-      'dist/parallelio-dom.js',
+      'dist/parallelio-and-dom.js',
       'test/*.js'
     ],
 

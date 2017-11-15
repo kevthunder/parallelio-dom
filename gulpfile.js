@@ -27,13 +27,28 @@ gulp.task('concat', function() {
 });
 
 gulp.task('concatCoffee', ['concat'], function() {
-  return gulp.src(['./tmp/*.coffee'])
+  return gulp.src(['./tmp/parallelio-dom.coffee'])
     .pipe(coffee())
     .pipe(gulp.dest('./dist/'));
 });
 
-gulp.task('full', ['concatCoffee'], function () {
-  return gulp.src([require.resolve('parallelio/dist/parallelio.js'),'./dist/parallelio-dom.js'])
+gulp.task('domPart', function() {
+  return gulp.src([
+    './src/*.coffee'
+  ])
+    .pipe(wrapper.compose({namespace:'Parallelio.DOM',aliases:{'parallelio':'Parallelio'},partOf:'Parallelio'}))
+    .pipe(concat('dom-part.coffee'))
+    .pipe(gulp.dest('./tmp/'));
+});
+
+gulp.task('domPartCoffee', ['domPart'], function() {
+  return gulp.src(['./tmp/dom-part.coffee'])
+    .pipe(coffee())
+    .pipe(gulp.dest('./tmp/'));
+});
+
+gulp.task('full', ['concatCoffee','domPartCoffee'], function () {
+  return gulp.src([require.resolve('parallelio/dist/parallelio.js'),'./tmp/dom-part.js'])
     .pipe(concat('parallelio-and-dom.js'))
     .pipe(gulp.dest('./dist/'));
 });
