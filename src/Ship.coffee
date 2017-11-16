@@ -1,9 +1,9 @@
 Tile = require('./Tile')
 TileContainer = require('parallelio').TileContainer
 DefaultGenerator = require('parallelio').RoomGenerator
+Door = require('./Door')
 
-Ship = {}
-class Ship.Tiled extends TileContainer
+class Ship extends TileContainer
   @include EventEmitter.prototype
   init: ->
     super()
@@ -26,14 +26,17 @@ class Ship.Tiled extends TileContainer
         display.get(0)._parallelio_obj = this
         display
   generate: (generator)->
-    generator = generator || (new DefaultGenerator()).tap ->
-      @wallFactory = (opt) ->
-        (new Tile(opt.x,opt.y)).tap ->
-          @cls = 'wall'
-          @walkable = false
-      @floorFactory = (opt) ->
-        (new Tile(opt.x,opt.y)).tap ->
-          @cls = 'floor'
-          @walkable = true
+    generator = generator || (new Ship.Generator()).tap ->
     generator.getTiles().forEach (tile)=>
       @addTile(tile)
+
+class Ship.Generator extends DefaultGenerator
+  wallFactory: (opt) ->
+    (new Tile(opt.x,opt.y)).tap ->
+      @cls = 'wall'
+      @walkable = false
+  floorFactory: (opt) ->
+    (new Tile.Floor(opt.x,opt.y))
+  doorFactory: (opt) ->
+    (new Tile.Floor(opt.x,opt.y)).tap ->
+      @addChild new Door(opt.direction)

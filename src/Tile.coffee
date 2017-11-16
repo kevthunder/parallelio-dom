@@ -1,11 +1,15 @@
 BaseTile = require('parallelio').Tile
+Floor = require('parallelio').Floor
+Display = require('./Display')
 
 class Tile extends BaseTile
-  @include EventEmitter.prototype
+  @extend Display
   @size: 20
   init: ->
     super()
-    @displayContainer
+    @baseCls = 'tile'
+    @initDisplay()
+
   @properties
     container: {}
     displayContainer:
@@ -15,27 +19,18 @@ class Tile extends BaseTile
           invalidator.prop('tileDisplay',container)
         else if container?.getProperty('display')
           invalidator.prop('display',container)
-      change: ->
-        if @displayContainer?
-          @display.appendTo(@displayContainer)
-    cls:
-      change: (old)->
-        if @getPropertyInstance('display').calculated
-          if old?
-            @display.removeClass(old)
-          if @cls?
-            @display.addClass(@cls)
-    display:
-      calcul: ->
-        newDiv = document.createElement("div");
-        displayPos = @getDisplayPos()
-        display = jQuery(newDiv)
-          .addClass('tile')
-          .addClass(@cls)
-          .css(top: displayPos.y, left: displayPos.x)
-        display.get(0)._parallelio_obj = this
-        display
-  getDisplayPos: ->
-    @tileToDisplayPos(@x, @y)
-  tileToDisplayPos: (x, y) ->
-    x:x*Tile.size, y:y*Tile.size
+    displayX:
+      calcul: (invalidator) ->
+        @tileToDisplayX(invalidator.prop('x'))
+    displayY:
+      calcul: (invalidator) ->
+        @tileToDisplayY(invalidator.prop('y'))
+  tileToDisplayX: (x) ->
+    x*Tile.size
+  tileToDisplayY: (y) ->
+    y*Tile.size
+
+class Tile.Floor extends Floor.definition({Tile:Tile})
+  init: ->
+    super()
+    @cls = 'floor'

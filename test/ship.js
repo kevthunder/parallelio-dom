@@ -3,7 +3,7 @@
 
   assert = chai.assert;
 
-  Ship = Parallelio.DOM.Ship.Tiled;
+  Ship = Parallelio.DOM.Ship;
 
   describe('Ship', function() {
     it('create a div', function() {
@@ -24,7 +24,8 @@
       });
       ship.generate();
       assert.isNotNull(container.querySelector('.ship'));
-      return assert.isNotNull(container.querySelector('.tile'));
+      assert.isNotNull(container.querySelector('.tile'));
+      return assert.isNotNull(container.querySelector('.door'));
     });
   });
 
