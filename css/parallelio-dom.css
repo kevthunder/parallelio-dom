@@ -7,3 +7,32 @@
     background: #222; }
   .tile.floor {
     background: #444; }
+
+.door {
+  z-index: 8;
+  position: absolute; }
+  .door:before, .door:after {
+    content: '';
+    position: absolute;
+    display: block;
+    width: 10px;
+    height: 10px;
+    background: #000; }
+  .door.horizontal:before, .door.horizontal:after {
+    top: 5px; }
+  .door.horizontal.open:before, .door.horizontal.open:after {
+    width: 2px; }
+  .door.horizontal.open:after {
+    left: 17px; }
+  .door.horizontal:after {
+    left: 10px; }
+  .door.vertical:before, .door.vertical:after {
+    left: 5px; }
+  .door.vertical.open:before, .door.vertical.open:after {
+    height: 2px; }
+  .door.vertical.open:after {
+    top: 17px; }
+  .door.vertical:after {
+    top: 10px; }
+  .door:before {
+    left: 0; }

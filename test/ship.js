@@ -15,7 +15,7 @@
       });
       return assert.isNotNull(container.querySelector('.ship'));
     });
-    return it('generate tiles', function() {
+    return it('generate tiles', function(done) {
       var container, ship;
       container = document.createElement("div");
       document.body.appendChild(container);
@@ -23,9 +23,12 @@
         return this.displayContainer = container;
       });
       ship.generate();
-      assert.isNotNull(container.querySelector('.ship'));
-      assert.isNotNull(container.querySelector('.tile'));
-      return assert.isNotNull(container.querySelector('.door'));
+      return window.requestAnimationFrame(function() {
+        assert.isNotNull(container.querySelector('.ship'));
+        assert.isNotNull(container.querySelector('.tile'));
+        assert.isNotNull(container.querySelector('.door'));
+        return done();
+      });
     });
   });
 

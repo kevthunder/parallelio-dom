@@ -3,11 +3,12 @@ BaseUpdater = require('parallelio').Spark.Updater
 class Updater extends BaseUpdater
   constructor: () ->
     super()
-    @updateCallback = => @update
+    @updateCallback = => @update()
     @binded = false
 
   update: ->
     super()
+    @binded = false
     if @callbacks.length > 0
       @requestFrame()
 
@@ -17,7 +18,7 @@ class Updater extends BaseUpdater
       @binded = true
 
   addCallback: (callback)->
-    super()
+    super(callback)
     @requestFrame()
 
 Updater.instance = new Updater()

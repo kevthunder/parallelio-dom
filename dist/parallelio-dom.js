@@ -21,7 +21,7 @@
         Updater.__super__.constructor.call(this);
         this.updateCallback = (function(_this) {
           return function() {
-            return _this.update;
+            return _this.update();
           };
         })(this);
         this.binded = false;
@@ -29,6 +29,7 @@
 
       Updater.prototype.update = function() {
         Updater.__super__.update.call(this);
+        this.binded = false;
         if (this.callbacks.length > 0) {
           return this.requestFrame();
         }
@@ -42,7 +43,7 @@
       };
 
       Updater.prototype.addCallback = function(callback) {
-        Updater.__super__.addCallback.call(this);
+        Updater.__super__.addCallback.call(this, callback);
         return this.requestFrame();
       };
 
@@ -196,7 +197,7 @@
     DOM.Door = definition();
     return DOM.Door.definition = definition;
   })(function(dependencies) {
-    var BaseDoor, Door, Tiled;
+    var BaseDoor, Door, Tiled, Updater;
     if (dependencies == null) {
       dependencies = {};
     }
@@ -204,6 +205,7 @@
     BaseDoor = dependencies.hasOwnProperty("BaseDoor") ? dependencies.BaseDoor : Parallelio.Door.definition({
       Tiled: Tiled
     });
+    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
     Door = (function(superClass) {
       extend(Door, superClass);
 
@@ -211,6 +213,22 @@
         this.baseCls = 'door';
         Door.__super__.constructor.call(this, direction);
       }
+
+      Door.properties({
+        direction: {
+          updater: Updater.instance,
+          change: function(old) {
+            if (this.getPropertyInstance('display').calculated) {
+              if (old != null) {
+                this.display.removeClass(old);
+              }
+              if (this.direction != null) {
+                return this.display.addClass(this.direction);
+              }
+            }
+          }
+        }
+      });
 
       return Door;
 
