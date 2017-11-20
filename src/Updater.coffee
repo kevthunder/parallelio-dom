@@ -7,10 +7,11 @@ class Updater extends BaseUpdater
     @binded = false
 
   update: ->
-    super()
+    loop
+      if @callbacks.length == 0
+        break
+      @callbacks[0]()
     @binded = false
-    if @callbacks.length > 0
-      @requestFrame()
 
   requestFrame: () ->
     if !@binded

@@ -10,10 +10,11 @@ class Door extends BaseDoor
   @properties
     direction:
       updater: Updater.instance
+      active: (invalidator)->
+        invalidator.propInitiated('display')
       change: (old)->
-        if @getPropertyInstance('display').calculated
-          if old?
-            @display.removeClass(old)
-          if @direction?
-            @display.addClass(@direction)
+        if old?
+          @display.removeClass(old)
+        if @direction?
+          @display.addClass(@direction)
     

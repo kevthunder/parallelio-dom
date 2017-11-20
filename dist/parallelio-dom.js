@@ -28,11 +28,13 @@
       }
 
       Updater.prototype.update = function() {
-        Updater.__super__.update.call(this);
-        this.binded = false;
-        if (this.callbacks.length > 0) {
-          return this.requestFrame();
+        while (true) {
+          if (this.callbacks.length === 0) {
+            break;
+          }
+          this.callbacks[0]();
         }
+        return this.binded = false;
       };
 
       Updater.prototype.requestFrame = function() {
@@ -217,14 +219,15 @@
       Door.properties({
         direction: {
           updater: Updater.instance,
+          active: function(invalidator) {
+            return invalidator.propInitiated('display');
+          },
           change: function(old) {
-            if (this.getPropertyInstance('display').calculated) {
-              if (old != null) {
-                this.display.removeClass(old);
-              }
-              if (this.direction != null) {
-                return this.display.addClass(this.direction);
-              }
+            if (old != null) {
+              this.display.removeClass(old);
+            }
+            if (this.direction != null) {
+              return this.display.addClass(this.direction);
             }
           }
         }

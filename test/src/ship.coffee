@@ -19,4 +19,5 @@ describe 'Ship', ->
       assert.isNotNull container.querySelector('.ship')
       assert.isNotNull container.querySelector('.tile')
       assert.isNotNull container.querySelector('.door')
+      assert.isNotNull container.querySelector('.door.vertical')
       done()
