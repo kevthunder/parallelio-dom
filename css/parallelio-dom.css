@@ -25,7 +25,7 @@
   .door.horizontal.open:after {
     left: 17px; }
   .door.horizontal:after {
-    left: 10px; }
+    left: 9px; }
   .door.vertical:before, .door.vertical:after {
     left: 5px; }
   .door.vertical.open:before, .door.vertical.open:after {
@@ -33,6 +33,6 @@
   .door.vertical.open:after {
     top: 17px; }
   .door.vertical:after {
-    top: 10px; }
+    top: 9px; }
   .door:before {
     left: 0; }
