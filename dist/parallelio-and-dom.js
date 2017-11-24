@@ -1965,7 +1965,7 @@
         if ((typeof window !== "undefined" && window !== null ? (ref1 = window.performance) != null ? ref1.now : void 0 : void 0) != null) {
           return window.performance.now();
         } else if ((typeof process !== "undefined" && process !== null ? process.uptime : void 0) != null) {
-          return process.uptime();
+          return process.uptime() * 1000;
         } else {
           return Date.now();
         }
@@ -1988,6 +1988,18 @@
 
       Timer.prototype.unpause = function() {
         return this.toggle(true);
+      };
+
+      Timer.prototype.getElapsedTime = function() {
+        if (this.running) {
+          return this.constructor.now() - this.startTime;
+        } else {
+          return this.time - this.remainingTime;
+        }
+      };
+
+      Timer.prototype.getPrc = function() {
+        return this.getElapsedTime() / this.time;
       };
 
       Timer.prototype._start = function() {
@@ -2024,6 +2036,8 @@
         if (this.repeat) {
           if (wasInterupted) {
             return this._start();
+          } else {
+            return this.startTime = this.constructor.now();
           }
         } else {
           return this.destroy();
@@ -2058,7 +2072,10 @@
 
       function Projectile(options) {
         this.setProperties(options);
+        this.init();
       }
+
+      Projectile.prototype.init = function() {};
 
       Projectile.properties({
         origin: {
@@ -2097,13 +2114,18 @@
           calcul: function() {
             return new Timing();
           }
+        },
+        moving: {
+          "default": false
         }
       });
 
       Projectile.prototype.launch = function() {
+        this.moving = true;
         return this.pathTimeout = this.timing.setTimeout((function(_this) {
           return function() {
-            return _this.deliverPayload();
+            _this.deliverPayload();
+            return _this.moving = false;
           };
         })(this), this.pathLength / this.speed * 1000);
       };
@@ -3067,17 +3089,39 @@
     Updater = (function() {
       function Updater() {
         this.callbacks = [];
+        this.next = [];
+        this.updating = false;
       }
 
       Updater.prototype.update = function() {
-        return this.callbacks.slice().forEach(function(callback) {
-          return callback();
-        });
+        var callback;
+        this.updating = true;
+        this.next = this.callbacks.slice();
+        while (this.callbacks.length > 0) {
+          callback = this.callbacks.shift();
+          callback();
+        }
+        this.callbacks = this.next;
+        this.updating = false;
+        return this;
       };
 
       Updater.prototype.addCallback = function(callback) {
         if (!this.callbacks.includes(callback)) {
-          return this.callbacks.push(callback);
+          this.callbacks.push(callback);
+        }
+        if (this.updating && !this.next.includes(callback)) {
+          return this.next.push(callback);
+        }
+      };
+
+      Updater.prototype.nextTick = function(callback) {
+        if (this.updating) {
+          if (!this.next.includes(callback)) {
+            return this.next.push(callback);
+          }
+        } else {
+          return this.addCallback(callback);
         }
       };
 
@@ -3085,7 +3129,11 @@
         var index;
         index = this.callbacks.indexOf(callback);
         if (index !== -1) {
-          return this.callbacks.splice(index, 1);
+          this.callbacks.splice(index, 1);
+        }
+        index = this.next.indexOf(callback);
+        if (index !== -1) {
+          return this.next.splice(index, 1);
         }
       };
 
@@ -3300,14 +3348,17 @@
     Parallelio.Weapon = definition();
     return Parallelio.Weapon.definition = definition;
   })(function(dependencies) {
-    var Tiled, Timing, Weapon;
+    var Damageable, Tiled, Timing, Weapon;
     if (dependencies == null) {
       dependencies = {};
     }
     Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : Parallelio.Tile;
     Timing = dependencies.hasOwnProperty("Timing") ? dependencies.Timing : Parallelio.Timing;
+    Damageable = dependencies.hasOwnProperty("Damageable") ? dependencies.Damageable : Parallelio.Damageable;
     Weapon = (function(superClass) {
       extend(Weapon, superClass);
+
+      Weapon.extend(Damageable);
 
       function Weapon(options) {
         this.setProperties(options);
@@ -3340,15 +3391,21 @@
         charged: {
           "default": true
         },
+        charging: {
+          "default": true
+        },
         enabled: {
           "default": true
         },
         autoFire: {
           "default": true
         },
+        criticalHealth: {
+          "default": 0.3
+        },
         canFire: {
           get: function() {
-            return this.target && this.enabled && this.charged;
+            return this.target && this.enabled && this.charged && this.health / this.maxHealth >= this.criticalHealth;
           }
         },
         timing: {
@@ -3378,8 +3435,10 @@
       };
 
       Weapon.prototype.recharge = function() {
+        this.charging = true;
         return this.chargeTimeout = this.timing.setTimeout((function(_this) {
           return function() {
+            _this.charging = false;
             return _this.recharged();
           };
         })(this), this.rechargeTime);
@@ -3430,13 +3489,11 @@
       }
 
       Updater.prototype.update = function() {
-        while (true) {
-          if (this.callbacks.length === 0) {
-            break;
-          }
-          this.callbacks[0]();
+        Updater.__super__.update.call(this);
+        this.binded = false;
+        if (this.callbacks.length > 0) {
+          return requestFrame();
         }
-        return this.binded = false;
       };
 
       Updater.prototype.requestFrame = function() {
@@ -3546,6 +3603,59 @@
   });
 
   (function(definition) {
+    DOM.Damageable = definition();
+    return DOM.Damageable.definition = definition;
+  })(function(dependencies) {
+    var BaseDamageable, Damageable, Display, Updater;
+    if (dependencies == null) {
+      dependencies = {};
+    }
+    BaseDamageable = dependencies.hasOwnProperty("BaseDamageable") ? dependencies.BaseDamageable : Parallelio.Damageable;
+    Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
+    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
+    Damageable = (function(superClass) {
+      extend(Damageable, superClass);
+
+      Damageable.extend(Display);
+
+      Damageable.include(EventEmitter.prototype);
+
+      function Damageable() {
+        Damageable.__super__.constructor.call(this);
+        this.healthCls();
+        this.initDisplay();
+      }
+
+      Damageable.properties({
+        healthClsSteps: {
+          "default": 10
+        },
+        healthCls: {
+          updater: Updater.instance,
+          active: function(invalidator) {
+            return invalidator.propInitiated('display');
+          },
+          calcul: function(invalidator) {
+            return 'health-' + (Math.ceil(invalidator.prop('health') / invalidator.prop('maxHealth') * invalidator.prop('healthClsSteps')));
+          },
+          change: function(old) {
+            if (old != null) {
+              this.display.removeClass(old);
+            }
+            if (this.healthCls != null) {
+              return this.display.addClass(this.healthCls);
+            }
+          }
+        }
+      });
+
+      return Damageable;
+
+    })(BaseDamageable);
+    return Damageable;
+  });
+
+  (function(definition) {
     DOM.Tiled = definition();
     return DOM.Tiled.definition = definition;
   })(function(dependencies) {
@@ -3639,6 +3749,37 @@
 
     })(BaseDoor);
     return Door;
+  });
+
+  (function(definition) {
+    DOM.Projectile = definition();
+    return DOM.Projectile.definition = definition;
+  })(function(dependencies) {
+    var BaseProjectile, Display, Projectile;
+    if (dependencies == null) {
+      dependencies = {};
+    }
+    BaseProjectile = dependencies.hasOwnProperty("BaseProjectile") ? dependencies.BaseProjectile : Parallelio.Projectile;
+    Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
+    Projectile = (function(superClass) {
+      extend(Projectile, superClass);
+
+      function Projectile() {
+        return Projectile.__super__.constructor.apply(this, arguments);
+      }
+
+      Projectile.extend(Display);
+
+      Projectile.prototype.init = function() {
+        Projectile.__super__.init.call(this);
+        this.baseCls = 'projectile';
+        return this.initDisplay();
+      };
+
+      return Projectile;
+
+    })(BaseProjectile);
+    return Projectile;
   });
 
   (function(definition) {
@@ -3953,6 +4094,52 @@
 
     })(Element);
     return View;
+  });
+
+  (function(definition) {
+    DOM.Weapon = definition();
+    return DOM.Weapon.definition = definition;
+  })(function(dependencies) {
+    var BaseWeapon, Damageable, Tiled, Updater, Weapon;
+    if (dependencies == null) {
+      dependencies = {};
+    }
+    Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : DOM.Tiled;
+    Damageable = dependencies.hasOwnProperty("Damageable") ? dependencies.Damageable : DOM.Damageable;
+    BaseWeapon = dependencies.hasOwnProperty("BaseWeapon") ? dependencies.BaseWeapon : Parallelio.Weapon.definition({
+      Tiled: Tiled,
+      Damageable: Damageable
+    });
+    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
+    Weapon = (function(superClass) {
+      extend(Weapon, superClass);
+
+      function Weapon(direction) {
+        this.baseCls = 'weapon';
+        Weapon.__super__.constructor.call(this, direction);
+      }
+
+      Weapon.properties({
+        direction: {
+          updater: Updater.instance,
+          active: function(invalidator) {
+            return invalidator.propInitiated('display');
+          },
+          change: function(old) {
+            if (old != null) {
+              this.display.removeClass(old.name);
+            }
+            if (this.direction.name != null) {
+              return this.display.addClass(this.direction.name);
+            }
+          }
+        }
+      });
+
+      return Weapon;
+
+    })(BaseWeapon);
+    return Weapon;
   });
 
 }).call(this);
