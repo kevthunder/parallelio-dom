@@ -5,11 +5,9 @@
     hasProp = {}.hasOwnProperty,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  Parallelio = typeof module !== "undefined" && module !== null ? module.exports = {} : (this.Parallelio == null ? this.Parallelio = {} : void 0, this.Parallelio);
+  Parallelio = {};
 
-  if (Parallelio.Spark == null) {
-    Parallelio.Spark = {};
-  }
+  Parallelio.Spark = {};
 
   Parallelio.strings = {
     "greekAlphabet": ["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "nu", "xi", "omicron", "pi", "rho", "sigma", "tau", "upsilon", "phi", "chi", "psi", "omega"],
@@ -215,6 +213,19 @@
         return event === this.event && target === this.target;
       };
 
+      EventBind.checkEmitter = function(emitter, fatal) {
+        if (fatal == null) {
+          fatal = true;
+        }
+        if (typeof emitter.addEventListener === 'function' || typeof emitter.addListener === 'function' || typeof emitter.on === 'function') {
+          return true;
+        } else if (fatal) {
+          throw new Error('No function to add event listeners was found');
+        } else {
+          return false;
+        }
+      };
+
       return EventBind;
 
     })();
@@ -242,12 +253,15 @@
       }
     };
     Invalidator = (function() {
+      Invalidator.strict = true;
+
       function Invalidator(property1, obj1) {
         this.property = property1;
         this.obj = obj1 != null ? obj1 : null;
         this.invalidationEvents = [];
         this.recycled = [];
         this.unknowns = [];
+        this.strict = this.constructor.strict;
         this.invalidateCallback = (function(_this) {
           return function() {
             _this.invalidate();
@@ -308,7 +322,9 @@
         if (target == null) {
           target = this.obj;
         }
-        return this.addEventBind(event, target, this.invalidateCallback);
+        if (this.checkEmitter(target)) {
+          return this.addEventBind(event, target, this.invalidateCallback);
+        }
       };
 
       Invalidator.prototype.value = function(val, event, target) {
@@ -326,8 +342,12 @@
         if (typeof prop !== 'string') {
           throw new Error('Property name must be a string');
         }
-        this.addEventBind(prop + 'Invalidated', target, this.getUnknownCallback(prop, target));
-        return this.value(target[prop], prop + 'Updated', target);
+        if (this.checkEmitter(target)) {
+          this.addEventBind(prop + 'Invalidated', target, this.getUnknownCallback(prop, target));
+          return this.value(target[prop], prop + 'Updated', target);
+        } else {
+          return target[prop];
+        }
       };
 
       Invalidator.prototype.propInitiated = function(prop, target) {
@@ -336,7 +356,7 @@
           target = this.obj;
         }
         initiated = target.getPropertyInstance(prop).initiated;
-        if (!initiated) {
+        if (!initiated && this.checkEmitter(target)) {
           this.event(prop + 'Updated', target);
         }
         return initiated;
@@ -387,6 +407,10 @@
         } else {
           return done;
         }
+      };
+
+      Invalidator.prototype.checkEmitter = function(emitter) {
+        return EventBind.checkEmitter(emitter, this.strict);
       };
 
       Invalidator.prototype.unbind = function() {
@@ -2098,16 +2122,123 @@
         },
         pathLength: {
           calcul: function() {
-            var dist, originTile, targetTile;
-            if ((this.origin != null) && (this.target != null)) {
-              originTile = this.origin.tile || this.origin;
-              targetTile = this.target.tile || this.target;
-              dist = originTile.dist(targetTile);
+            var dist;
+            if ((this.originTile != null) && (this.targetTile != null)) {
+              dist = this.originTile.dist(this.targetTile);
               if (dist) {
                 return dist.length;
               }
             }
             return 100;
+          }
+        },
+        originTile: {
+          calcul: function(invalidator) {
+            var origin;
+            origin = invalidator.prop('origin');
+            if (origin != null) {
+              return origin.tile || origin;
+            }
+          }
+        },
+        targetTile: {
+          calcul: function(invalidator) {
+            var target;
+            target = invalidator.prop('target');
+            if (target != null) {
+              return target.tile || target;
+            }
+          }
+        },
+        container: {
+          calcul: function(invalidate) {
+            var originTile, targetTile;
+            originTile = invalidate.prop('originTile');
+            targetTile = invalidate.prop('targetTile');
+            if (originTile.container === targetTile.container) {
+              return originTile.container;
+            } else if (invalidate.prop('prcPath') > 0.5) {
+              return targetTile.container;
+            } else {
+              return originTile.container;
+            }
+          }
+        },
+        x: {
+          calcul: function(invalidate) {
+            var startPos;
+            startPos = invalidate.prop('startPos');
+            return (invalidate.prop('targetPos').x - startPos.x) * invalidate.prop('prcPath') + startPos.x;
+          }
+        },
+        y: {
+          calcul: function(invalidate) {
+            var startPos;
+            startPos = invalidate.prop('startPos');
+            return (invalidate.prop('targetPos').y - startPos.y) * invalidate.prop('prcPath') + startPos.y;
+          }
+        },
+        startPos: {
+          calcul: function(invalidate) {
+            var container, dist, offset, originTile;
+            originTile = invalidate.prop('originTile');
+            container = invalidate.prop('container');
+            offset = this.startOffset;
+            if (originTile.container !== container) {
+              dist = container.dist(originTile.container);
+              offset.x += dist.x;
+              offset.y += dist.y;
+            }
+            return {
+              x: originTile.x + offset.x,
+              y: originTile.y + offset.y
+            };
+          },
+          output: function(val) {
+            return Object.assign({}, val);
+          }
+        },
+        targetPos: {
+          calcul: function(invalidate) {
+            var container, dist, offset, targetTile;
+            targetTile = invalidate.prop('targetTile');
+            container = invalidate.prop('container');
+            offset = this.targetOffset;
+            if (targetTile.container !== container) {
+              dist = container.dist(targetTile.container);
+              offset.x += dist.x;
+              offset.y += dist.y;
+            }
+            return {
+              x: targetTile.x + offset.x,
+              y: targetTile.y + offset.y
+            };
+          },
+          output: function(val) {
+            return Object.assign({}, val);
+          }
+        },
+        startOffset: {
+          "default": {
+            x: 0.5,
+            y: 0.5
+          },
+          output: function(val) {
+            return Object.assign({}, val);
+          }
+        },
+        targetOffset: {
+          "default": {
+            x: 0.5,
+            y: 0.5
+          },
+          output: function(val) {
+            return Object.assign({}, val);
+          }
+        },
+        prcPath: {
+          get: function() {
+            return this.pathTimeout.getPrc();
           }
         },
         timing: {
@@ -3457,6 +3588,12 @@
     return Weapon;
   });
 
+  if (typeof module !== "undefined" && module !== null) {
+    module.exports = Parallelio;
+  } else {
+    this.Parallelio = Parallelio;
+  }
+
 }).call(this);
 
 (function() {
@@ -3755,12 +3892,13 @@
     DOM.Projectile = definition();
     return DOM.Projectile.definition = definition;
   })(function(dependencies) {
-    var BaseProjectile, Display, Projectile;
+    var BaseProjectile, Display, Projectile, Updater;
     if (dependencies == null) {
       dependencies = {};
     }
     BaseProjectile = dependencies.hasOwnProperty("BaseProjectile") ? dependencies.BaseProjectile : Parallelio.Projectile;
     Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
+    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
     Projectile = (function(superClass) {
       extend(Projectile, superClass);
 
@@ -3774,6 +3912,48 @@
         Projectile.__super__.init.call(this);
         this.baseCls = 'projectile';
         return this.initDisplay();
+      };
+
+      Projectile.properties({
+        displayContainer: {
+          calcul: function(invalidator) {
+            var container;
+            container = invalidator.prop('container');
+            if (container != null ? container.getProperty('tileDisplay') : void 0) {
+              return invalidator.prop('tileDisplay', container);
+            } else if (container != null ? container.getProperty('display') : void 0) {
+              return invalidator.prop('display', container);
+            }
+          }
+        },
+        displayX: {
+          calcul: function(invalidate) {
+            return originTile.tileToDisplayX(invalidate.prop('x'));
+          }
+        },
+        displayY: {
+          calcul: function(invalidate) {
+            return originTile.tileToDisplayY(invalidate.prop('y'));
+          }
+        },
+        moving: {
+          change: function() {
+            if (this.moving) {
+              return Updater.instance.addCallback(this.callback('invalidatePrcPath'));
+            } else {
+              return Updater.instance.removeCallback(this.callback('invalidatePrcPath'));
+            }
+          }
+        },
+        prcPath: {
+          calcul: function(invalidate) {
+            return this.pathTimeout.getPrc();
+          }
+        }
+      });
+
+      Projectile.prototype.destroy = function() {
+        return Updater.instance.removeCallback(this.callback('invalidatePrcPath'));
       };
 
       return Projectile;

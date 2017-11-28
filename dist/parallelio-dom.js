@@ -294,12 +294,13 @@
     DOM.Projectile = definition();
     return DOM.Projectile.definition = definition;
   })(function(dependencies) {
-    var BaseProjectile, Display, Projectile;
+    var BaseProjectile, Display, Projectile, Updater;
     if (dependencies == null) {
       dependencies = {};
     }
     BaseProjectile = dependencies.hasOwnProperty("BaseProjectile") ? dependencies.BaseProjectile : Parallelio.Projectile;
     Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
+    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
     Projectile = (function(superClass) {
       extend(Projectile, superClass);
 
@@ -313,6 +314,48 @@
         Projectile.__super__.init.call(this);
         this.baseCls = 'projectile';
         return this.initDisplay();
+      };
+
+      Projectile.properties({
+        displayContainer: {
+          calcul: function(invalidator) {
+            var container;
+            container = invalidator.prop('container');
+            if (container != null ? container.getProperty('tileDisplay') : void 0) {
+              return invalidator.prop('tileDisplay', container);
+            } else if (container != null ? container.getProperty('display') : void 0) {
+              return invalidator.prop('display', container);
+            }
+          }
+        },
+        displayX: {
+          calcul: function(invalidate) {
+            return originTile.tileToDisplayX(invalidate.prop('x'));
+          }
+        },
+        displayY: {
+          calcul: function(invalidate) {
+            return originTile.tileToDisplayY(invalidate.prop('y'));
+          }
+        },
+        moving: {
+          change: function() {
+            if (this.moving) {
+              return Updater.instance.addCallback(this.callback('invalidatePrcPath'));
+            } else {
+              return Updater.instance.removeCallback(this.callback('invalidatePrcPath'));
+            }
+          }
+        },
+        prcPath: {
+          calcul: function(invalidate) {
+            return this.pathTimeout.getPrc();
+          }
+        }
+      });
+
+      Projectile.prototype.destroy = function() {
+        return Updater.instance.removeCallback(this.callback('invalidatePrcPath'));
       };
 
       return Projectile;
