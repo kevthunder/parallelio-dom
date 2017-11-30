@@ -31,7 +31,7 @@
         Updater.__super__.update.call(this);
         this.binded = false;
         if (this.callbacks.length > 0) {
-          return requestFrame();
+          return this.requestFrame();
         }
       };
 
@@ -80,6 +80,7 @@
       Display.properties({
         displayContainer: {
           updater: Updater.instance,
+          "default": null,
           change: function() {
             if (this.displayContainer != null) {
               return this.display.appendTo(this.displayContainer);
@@ -325,17 +326,19 @@
               return invalidator.prop('tileDisplay', container);
             } else if (container != null ? container.getProperty('display') : void 0) {
               return invalidator.prop('display', container);
+            } else {
+              return invalidator.prop('originTile').displayContainer;
             }
           }
         },
         displayX: {
           calcul: function(invalidate) {
-            return originTile.tileToDisplayX(invalidate.prop('x'));
+            return this.originTile.tileToDisplayX(invalidate.prop('x'));
           }
         },
         displayY: {
           calcul: function(invalidate) {
-            return originTile.tileToDisplayY(invalidate.prop('y'));
+            return this.originTile.tileToDisplayY(invalidate.prop('y'));
           }
         },
         moving: {
@@ -345,11 +348,6 @@
             } else {
               return Updater.instance.removeCallback(this.callback('invalidatePrcPath'));
             }
-          }
-        },
-        prcPath: {
-          calcul: function(invalidate) {
-            return this.pathTimeout.getPrc();
           }
         }
       });
@@ -682,15 +680,17 @@
     DOM.Weapon = definition();
     return DOM.Weapon.definition = definition;
   })(function(dependencies) {
-    var BaseWeapon, Damageable, Tiled, Updater, Weapon;
+    var BaseWeapon, Damageable, Projectile, Tiled, Updater, Weapon;
     if (dependencies == null) {
       dependencies = {};
     }
     Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : DOM.Tiled;
+    Projectile = dependencies.hasOwnProperty("Projectile") ? dependencies.Projectile : DOM.Projectile;
     Damageable = dependencies.hasOwnProperty("Damageable") ? dependencies.Damageable : DOM.Damageable;
     BaseWeapon = dependencies.hasOwnProperty("BaseWeapon") ? dependencies.BaseWeapon : Parallelio.Weapon.definition({
       Tiled: Tiled,
-      Damageable: Damageable
+      Damageable: Damageable,
+      Projectile: Projectile
     });
     Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
     Weapon = (function(superClass) {

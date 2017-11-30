@@ -16,21 +16,20 @@ class Projectile extends BaseProjectile
           invalidator.prop('tileDisplay',container)
         else if container?.getProperty('display')
           invalidator.prop('display',container)
+        else 
+          invalidator.prop('originTile').displayContainer
     displayX:
       calcul: (invalidate)->
-        originTile.tileToDisplayX invalidate.prop('x')
+        @originTile.tileToDisplayX invalidate.prop('x')
     displayY:
       calcul: (invalidate)->
-        originTile.tileToDisplayY invalidate.prop('y')
+        @originTile.tileToDisplayY invalidate.prop('y')
     moving:
       change: ()->
         if @moving
           Updater.instance.addCallback(@callback('invalidatePrcPath'))
         else
           Updater.instance.removeCallback(@callback('invalidatePrcPath'))
-    prcPath:
-      calcul: (invalidate)->
-        @pathTimeout.getPrc()
 
   destroy: ->
     Updater.instance.removeCallback(@callback('invalidatePrcPath'))

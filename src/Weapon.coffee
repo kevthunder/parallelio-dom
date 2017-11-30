@@ -1,6 +1,7 @@
 Tiled = require('./Tiled')
+Projectile = require('./Projectile')
 Damageable = require('./Damageable')
-BaseWeapon = require('parallelio').Weapon.definition({Tiled:Tiled,Damageable:Damageable})
+BaseWeapon = require('parallelio').Weapon.definition({Tiled:Tiled,Damageable:Damageable,Projectile:Projectile})
 Updater = require('./Updater')
 
 class Weapon extends BaseWeapon

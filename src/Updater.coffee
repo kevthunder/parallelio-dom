@@ -10,7 +10,7 @@ class Updater extends BaseUpdater
     super()
     @binded = false
     if @callbacks.length > 0
-      requestFrame()
+      @requestFrame()
 
 
   requestFrame: () ->

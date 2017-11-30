@@ -10,6 +10,7 @@ class Display extends Element
   @properties
     displayContainer:
       updater: Updater.instance
+      default: null
       change: ->
         if @displayContainer?
           @display.appendTo(@displayContainer)
