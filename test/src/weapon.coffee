@@ -36,5 +36,7 @@ describe 'Weapon', ->
       assert.isNotNull container.querySelector('.tile')
       assert.isNotNull container.querySelector('.weapon')
       assert.isNotNull container.querySelector('.projectile')
+      weapon.lastProjectile.destroy()
+      assert.isNull container.querySelector('.projectile')
       done()
     

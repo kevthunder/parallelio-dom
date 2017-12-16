@@ -3,10 +3,6 @@ Updater = require('./Updater')
 
 class Display extends Element
   @include EventEmitter.prototype
-
-  initDisplay: ->
-    @displayContainer
-    
   @properties
     displayContainer:
       updater: Updater.instance
@@ -43,3 +39,11 @@ class Display extends Element
       change: (old)->
         if @getPropertyInstance('display').calculated
           @display.css(top: @displayY)
+
+  initDisplay: ->
+    @displayContainer
+
+  destroyDisplay: ->
+    if @_display?
+      @display.remove()
+    

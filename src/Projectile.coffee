@@ -32,6 +32,7 @@ class Projectile extends BaseProjectile
           Updater.instance.removeCallback(@callback('invalidatePrcPath'))
 
   destroy: ->
+    @destroyDisplay()
     Updater.instance.removeCallback(@callback('invalidatePrcPath'))
 
 

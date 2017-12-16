@@ -3676,10 +3676,6 @@
 
       Display.include(EventEmitter.prototype);
 
-      Display.prototype.initDisplay = function() {
-        return this.displayContainer;
-      };
-
       Display.properties({
         displayContainer: {
           updater: Updater.instance,
@@ -3738,6 +3734,16 @@
           }
         }
       });
+
+      Display.prototype.initDisplay = function() {
+        return this.displayContainer;
+      };
+
+      Display.prototype.destroyDisplay = function() {
+        if (this._display != null) {
+          return this.display.remove();
+        }
+      };
 
       return Display;
 
@@ -3956,6 +3962,7 @@
       });
 
       Projectile.prototype.destroy = function() {
+        this.destroyDisplay();
         return Updater.instance.removeCallback(this.callback('invalidatePrcPath'));
       };
 
