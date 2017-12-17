@@ -235,14 +235,20 @@
         },
         displayX: {
           calcul: function(invalidator) {
-            var ref;
-            return (ref = invalidator.prop('tile')) != null ? ref.displayX : void 0;
+            var tile;
+            tile = invalidator.prop('tile');
+            if (tile != null) {
+              return tile.displayX + tile.tileToDisplayX(invalidator.prop('offsetX'));
+            }
           }
         },
         displayY: {
           calcul: function(invalidator) {
-            var ref;
-            return (ref = invalidator.prop('tile')) != null ? ref.displayY : void 0;
+            var tile;
+            tile = invalidator.prop('tile');
+            if (tile != null) {
+              return tile.displayY + tile.tileToDisplayY(invalidator.prop('offsetY'));
+            }
           }
         }
       });
