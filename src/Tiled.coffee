@@ -17,7 +17,11 @@ class Tiled extends BaseTiled
           invalidator.prop('displayContainer',tile)
     displayX:
       calcul: (invalidator) ->
-        invalidator.prop('tile')?.displayX
+        tile = invalidator.prop('tile')
+        if tile?
+          tile.displayX + tile.tileToDisplayX(invalidator.prop('offsetX'))
     displayY:
       calcul: (invalidator) ->
-        invalidator.prop('tile')?.displayY
+        tile = invalidator.prop('tile')
+        if tile?
+          tile.displayY + tile.tileToDisplayY(invalidator.prop('offsetY'))
