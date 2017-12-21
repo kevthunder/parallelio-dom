@@ -1,0 +1,12 @@
+@import 'variables'
+@import 'mixins/icon'
+
+.character
+  z-index: 10
+  position: absolute
+  font-size: $tilesize
+  width: $tilesize
+  text-align: center
+  @include fa-icon($fa-var-male)
+  &.selected
+    color: #eee

@@ -3965,59 +3965,6 @@
   });
 
   (function(definition) {
-    DOM.Damageable = definition();
-    return DOM.Damageable.definition = definition;
-  })(function(dependencies) {
-    var BaseDamageable, Damageable, Display, Updater;
-    if (dependencies == null) {
-      dependencies = {};
-    }
-    BaseDamageable = dependencies.hasOwnProperty("BaseDamageable") ? dependencies.BaseDamageable : Parallelio.Damageable;
-    Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
-    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
-    Damageable = (function(superClass) {
-      extend(Damageable, superClass);
-
-      Damageable.extend(Display);
-
-      Damageable.include(EventEmitter.prototype);
-
-      function Damageable() {
-        Damageable.__super__.constructor.call(this);
-        this.healthCls();
-        this.initDisplay();
-      }
-
-      Damageable.properties({
-        healthClsSteps: {
-          "default": 10
-        },
-        healthCls: {
-          updater: Updater.instance,
-          active: function(invalidator) {
-            return invalidator.propInitiated('display');
-          },
-          calcul: function(invalidator) {
-            return 'health-' + (Math.ceil(invalidator.prop('health') / invalidator.prop('maxHealth') * invalidator.prop('healthClsSteps')));
-          },
-          change: function(old) {
-            if (old != null) {
-              this.display.removeClass(old);
-            }
-            if (this.healthCls != null) {
-              return this.display.addClass(this.healthCls);
-            }
-          }
-        }
-      });
-
-      return Damageable;
-
-    })(BaseDamageable);
-    return Damageable;
-  });
-
-  (function(definition) {
     DOM.Tiled = definition();
     return DOM.Tiled.definition = definition;
   })(function(dependencies) {
@@ -4073,6 +4020,86 @@
 
     })(BaseTiled);
     return Tiled;
+  });
+
+  (function(definition) {
+    DOM.Character = definition();
+    return DOM.Character.definition = definition;
+  })(function(dependencies) {
+    var BaseCharacter, Character, Tiled, Updater;
+    if (dependencies == null) {
+      dependencies = {};
+    }
+    Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : DOM.Tiled;
+    BaseCharacter = dependencies.hasOwnProperty("BaseCharacter") ? dependencies.BaseCharacter : Parallelio.Character.definition({
+      Tiled: Tiled
+    });
+    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
+    Character = (function(superClass) {
+      extend(Character, superClass);
+
+      function Character() {
+        Character.__super__.constructor.call(this);
+        this.baseCls = 'character';
+      }
+
+      return Character;
+
+    })(BaseCharacter);
+    return Character;
+  });
+
+  (function(definition) {
+    DOM.Damageable = definition();
+    return DOM.Damageable.definition = definition;
+  })(function(dependencies) {
+    var BaseDamageable, Damageable, Display, Updater;
+    if (dependencies == null) {
+      dependencies = {};
+    }
+    BaseDamageable = dependencies.hasOwnProperty("BaseDamageable") ? dependencies.BaseDamageable : Parallelio.Damageable;
+    Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
+    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
+    Damageable = (function(superClass) {
+      extend(Damageable, superClass);
+
+      Damageable.extend(Display);
+
+      Damageable.include(EventEmitter.prototype);
+
+      function Damageable() {
+        Damageable.__super__.constructor.call(this);
+        this.healthCls();
+        this.initDisplay();
+      }
+
+      Damageable.properties({
+        healthClsSteps: {
+          "default": 10
+        },
+        healthCls: {
+          updater: Updater.instance,
+          active: function(invalidator) {
+            return invalidator.propInitiated('display');
+          },
+          calcul: function(invalidator) {
+            return 'health-' + (Math.ceil(invalidator.prop('health') / invalidator.prop('maxHealth') * invalidator.prop('healthClsSteps')));
+          },
+          change: function(old) {
+            if (old != null) {
+              this.display.removeClass(old);
+            }
+            if (this.healthCls != null) {
+              return this.display.addClass(this.healthCls);
+            }
+          }
+        }
+      });
+
+      return Damageable;
+
+    })(BaseDamageable);
+    return Damageable;
   });
 
   (function(definition) {
