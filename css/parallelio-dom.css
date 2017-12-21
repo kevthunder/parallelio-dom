@@ -43,12 +43,13 @@
   position: absolute;
   font-size: 20px;
   width: 20px;
-  text-align: center;
-  display: inline-block;
-  font-family: FontAwesome;
-  text-rendering: auto;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  content: ""; }
+  text-align: center; }
+  .character:before {
+    display: inline-block;
+    font-family: FontAwesome;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    content: ""; }
   .character.selected {
     color: #eee; }

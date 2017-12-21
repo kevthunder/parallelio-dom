@@ -7,6 +7,7 @@
   font-size: $tilesize
   width: $tilesize
   text-align: center
-  @include fa-icon($fa-var-male)
+  &:before
+    @include fa-icon($fa-var-male)
   &.selected
     color: #eee
