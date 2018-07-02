@@ -764,4 +764,76 @@
     return Weapon;
   });
 
+  (function(definition) {
+    DOM.Wire = definition();
+    return DOM.Wire.definition = definition;
+  })(function(dependencies) {
+    var BaseWire, Tiled, Updater, Wire;
+    if (dependencies == null) {
+      dependencies = {};
+    }
+    Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : DOM.Tiled;
+    BaseWire = dependencies.hasOwnProperty("BaseWire") ? dependencies.BaseWire : Parallelio.Wire.definition({
+      Tiled: Tiled
+    });
+    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
+    Wire = (function(superClass) {
+      extend(Wire, superClass);
+
+      function Wire(wireType) {
+        Wire.__super__.constructor.call(this, wireType);
+        this.baseCls = 'wire';
+        this.connectedDirections;
+      }
+
+      Wire.properties({
+        display: {
+          calcul: function(invalidator, sup) {
+            return sup();
+          }
+        },
+        connectedDirections: {
+          updater: Updater.instance,
+          active: function(invalidator) {
+            return invalidator.propInitiated('display');
+          },
+          change: function(old) {
+            if (old) {
+              old.forEach((function(_this) {
+                return function(d) {
+                  return _this.display.removeClass(_this.getClassFromDirection(d));
+                };
+              })(this));
+            }
+            return this.connectedDirections.forEach((function(_this) {
+              return function(d) {
+                return _this.display.addClass(_this.getClassFromDirection(d));
+              };
+            })(this));
+          }
+        },
+        wireType: {
+          updater: Updater.instance,
+          active: function(invalidator) {
+            return invalidator.propInitiated('display');
+          },
+          change: function(old) {
+            if (old) {
+              this.display.removeClass(old);
+            }
+            return this.display.addClass(this.wireType);
+          }
+        }
+      });
+
+      Wire.prototype.getClassFromDirection = function(d) {
+        return 'conn' + d.name.charAt(0).toUpperCase() + d.name.slice(1);
+      };
+
+      return Wire;
+
+    })(BaseWire);
+    return Wire;
+  });
+
 }).call(this);

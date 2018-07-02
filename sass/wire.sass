@@ -1,0 +1,52 @@
+@import 'variables'
+
+$wiresize: 3px
+
+.wire
+  position: absolute
+  background: #000
+  width: $wiresize + 2
+  height: $wiresize + 2
+  margin: $tilesize/2-$wiresize 0 0 $tilesize/2-$wiresize
+  &.red
+    background: #300
+    &::before, &::after
+      background: #300
+    &.activated
+      background: #600
+      &::before, &::after
+        background: #600
+  &.blue
+    background: #003
+    &::before, &::after
+      background: #003
+    &.activated
+      background: #036
+      &::before, &::after
+        background: #036
+  &.connLeft::before, &.connRight::before
+    position: absolute
+    height: $wiresize
+    top: 1px
+    width: $tilesize/2
+    content: ""
+  &.connLeft::before
+    right: 2px
+  &.connRight::before
+    left: 2px
+  &.connRight.connLeft::before
+    width: $tilesize - 1
+    left: $tilesize/-2+$wiresize
+  &.connDown::after, &.connUp::after
+    position: absolute
+    width: $wiresize
+    left: 1px
+    height: $tilesize/2
+    content: ""
+  &.connDown::after
+    top: 2px
+  &.connUp::after
+    bottom: 2px
+  &.connUp.connDown::after
+    height: $tilesize - 1
+    top: $tilesize/-2+$wiresize

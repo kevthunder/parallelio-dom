@@ -53,3 +53,52 @@
     content: ""; }
   .character.selected {
     color: #eee; }
+
+.wire {
+  position: absolute;
+  background: #000;
+  width: 5px;
+  height: 5px;
+  margin: 7px 0 0 7px; }
+  .wire.red {
+    background: #300; }
+    .wire.red::before, .wire.red::after {
+      background: #300; }
+    .wire.red.activated {
+      background: #600; }
+      .wire.red.activated::before, .wire.red.activated::after {
+        background: #600; }
+  .wire.blue {
+    background: #003; }
+    .wire.blue::before, .wire.blue::after {
+      background: #003; }
+    .wire.blue.activated {
+      background: #036; }
+      .wire.blue.activated::before, .wire.blue.activated::after {
+        background: #036; }
+  .wire.connLeft::before, .wire.connRight::before {
+    position: absolute;
+    height: 3px;
+    top: 1px;
+    width: 10px;
+    content: ""; }
+  .wire.connLeft::before {
+    right: 2px; }
+  .wire.connRight::before {
+    left: 2px; }
+  .wire.connRight.connLeft::before {
+    width: 19px;
+    left: -7px; }
+  .wire.connDown::after, .wire.connUp::after {
+    position: absolute;
+    width: 3px;
+    left: 1px;
+    height: 10px;
+    content: ""; }
+  .wire.connDown::after {
+    top: 2px; }
+  .wire.connUp::after {
+    bottom: 2px; }
+  .wire.connUp.connDown::after {
+    height: 19px;
+    top: -7px; }
