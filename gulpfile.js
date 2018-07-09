@@ -8,6 +8,8 @@ var merge = require('merge2');
 var wrapper = require('spark-wrapper');
 var sass = require('gulp-sass');
 var TestServer = require('karma').Server;
+var run = require('run-sequence');
+var autoCommit = require('spark-auto-commit');
 
 gulp.task('coffee', function() {
   return gulp.src(['./src/*.coffee'])
@@ -76,6 +78,12 @@ gulp.task('coffeeTest', function() {
 
 gulp.task('build', ['sass', 'coffee', 'concatCoffee', 'compress'], function () {
     console.log('Build Complete');
+});
+
+gulp.task('update', function() {
+  return autoCommit.afterModuleUpdate(function(cb){
+    return run('test',cb);
+  });
 });
 
 gulp.task('test', ['build','coffeeTest'], function(done) {
