@@ -1500,7 +1500,7 @@
 
       Property.fn = {
         getProperty: function(name) {
-          return this._properties.find(function(prop) {
+          return this._properties && this._properties.find(function(prop) {
             return prop.name === name;
           });
         },
@@ -1651,23 +1651,45 @@
         return this;
       };
 
-      Element.include = function(obj) {
-        var k, key, len, property, ref1, value;
-        for (key in obj) {
-          value = obj[key];
-          if (indexOf.call(Element.elementKeywords, key) < 0) {
-            if (key === '_properties') {
-              for (k = 0, len = value.length; k < len; k++) {
-                property = value[k];
-                this.property(property.name, Object.assign({}, property.options));
-              }
-            } else {
-              this.prototype[key] = value;
-            }
+      Element.getIncludableProperties = function(obj) {
+        var exclude, props;
+        exclude = Element.elementKeywords;
+        if (obj._properties != null) {
+          exclude = exclude.concat(obj._properties.map(function(prop) {
+            return prop.name;
+          }));
+          exclude.push("_properties");
+        }
+        props = [];
+        while (true) {
+          props = props.concat(Object.getOwnPropertyNames(obj).filter((function(_this) {
+            return function(key) {
+              return !_this.prototype.hasOwnProperty(key) && key.substr(0, 2) !== "__" && indexOf.call(exclude, key) < 0 && indexOf.call(props, key) < 0;
+            };
+          })(this)));
+          if (!((obj = Object.getPrototypeOf(obj)) && obj !== Object && obj !== Element.prototype)) {
+            break;
           }
         }
-        if ((ref1 = obj.included) != null) {
-          ref1.apply(this);
+        return props;
+      };
+
+      Element.include = function(obj) {
+        var k, key, l, len, len1, property, ref1, ref2, ref3;
+        ref1 = this.getIncludableProperties(obj);
+        for (k = 0, len = ref1.length; k < len; k++) {
+          key = ref1[k];
+          this.prototype[key] = obj[key];
+        }
+        if (obj._properties != null) {
+          ref2 = obj._properties;
+          for (l = 0, len1 = ref2.length; l < len1; l++) {
+            property = ref2[l];
+            this.property(property.name, Object.assign({}, property.options));
+          }
+        }
+        if ((ref3 = obj.included) != null) {
+          ref3.apply(this);
         }
         return this;
       };
