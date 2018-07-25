@@ -22,9 +22,9 @@
   })(function() {
     var PropertyInstance;
     PropertyInstance = (function() {
-      function PropertyInstance(property1, obj1) {
+      function PropertyInstance(property1, obj3) {
         this.property = property1;
-        this.obj = obj1;
+        this.obj = obj3;
         this.init();
       }
 
@@ -51,13 +51,17 @@
         var old;
         val = this.ingest(val);
         this.revalidated();
-        if (this.value !== val) {
+        if (this.checkChanges(val, this.value)) {
           old = this.value;
           this.value = val;
           this.manual = true;
           this.changed(old);
         }
         return this;
+      };
+
+      PropertyInstance.prototype.checkChanges = function(val, old) {
+        return val !== old;
       };
 
       PropertyInstance.prototype.destroy = function() {};
@@ -211,6 +215,28 @@
 
       Collection.prototype.changed = function() {};
 
+      Collection.prototype.checkChanges = function(old, ordered, compareFunction) {
+        if (ordered == null) {
+          ordered = true;
+        }
+        if (compareFunction == null) {
+          compareFunction = null;
+        }
+        if (compareFunction == null) {
+          compareFunction = function(a, b) {
+            return a === b;
+          };
+        }
+        old = this.copy(old.slice());
+        return this.count() !== old.length || (ordered ? this.some(function(val, i) {
+          return !compareFunction(old.get(i), val);
+        }) : this.some(function(a) {
+          return !old.pluck(function(b) {
+            return compareFunction(a, b);
+          });
+        }));
+      };
+
       Collection.prototype.get = function(i) {
         return this._array[i];
       };
@@ -241,6 +267,20 @@
         }
       };
 
+      Collection.prototype.pluck = function(fn) {
+        var found, index, old;
+        index = this._array.findIndex(fn);
+        if (index > -1) {
+          old = this.toArray();
+          found = this._array[index];
+          this._array.splice(index, 1);
+          this.changed(old);
+          return found;
+        } else {
+          return null;
+        }
+      };
+
       Collection.prototype.toArray = function() {
         return this._array.slice();
       };
@@ -257,26 +297,26 @@
 
       Collection.readFunctions.forEach(function(funct) {
         return Collection.prototype[funct] = function() {
-          var arg, ref1;
+          var arg, ref3;
           arg = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-          return (ref1 = this._array)[funct].apply(ref1, arg);
+          return (ref3 = this._array)[funct].apply(ref3, arg);
         };
       });
 
       Collection.readListFunctions.forEach(function(funct) {
         return Collection.prototype[funct] = function() {
-          var arg, ref1;
+          var arg, ref3;
           arg = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-          return this.copy((ref1 = this._array)[funct].apply(ref1, arg));
+          return this.copy((ref3 = this._array)[funct].apply(ref3, arg));
         };
       });
 
       Collection.writefunctions.forEach(function(funct) {
         return Collection.prototype[funct] = function() {
-          var arg, old, ref1, res;
+          var arg, old, ref3, res;
           arg = 1 <= arguments.length ? slice.call(arguments, 0) : [];
           old = this.toArray();
-          res = (ref1 = this._array)[funct].apply(ref1, arg);
+          res = (ref3 = this._array)[funct].apply(ref3, arg);
           this.changed(old);
           return res;
         };
@@ -312,7 +352,7 @@
       };
 
       Collection.prototype.equals = function(arr) {
-        return (this.count() === (tyepeof(arr.count === 'function') ? arr.count() : arr.length)) && this.every(function(val, i) {
+        return (this.count() === (typeof arr.count === 'function' ? arr.count() : arr.length)) && this.every(function(val, i) {
           return arr[i] === val;
         });
       };
@@ -353,11 +393,7 @@
   })(function() {
     var Binder;
     Binder = (function() {
-      function Binder(target1, callback1) {
-        this.target = target1;
-        this.callback = callback1;
-        this.binded = false;
-      }
+      function Binder() {}
 
       Binder.prototype.bind = function() {
         if (!this.binded && (this.callback != null) && (this.target != null)) {
@@ -382,13 +418,23 @@
       };
 
       Binder.prototype.equals = function(binder) {
-        return binder.constructor === this.constructor && binder.target === this.target && this.compareCallback(binder.callback);
+        return this.constructor.compareRefered(binder, this);
       };
 
-      Binder.prototype.compareCallback = function(callback) {
-        return callback === this.callback || ((callback.maker != null) && callback.maker === this.callback.maker && callback.uses.length === this.callback.uses.length && this.callback.uses.every(function(arg, i) {
-          return arg === callback.uses[i];
-        }));
+      Binder.compareRefered = function(obj1, obj2) {
+        return obj1 === obj2 || ((obj1 != null) && (obj2 != null) && obj1.constructor === obj2.constructor && this.compareRef(obj1.ref, obj2.ref));
+      };
+
+      Binder.compareRef = function(ref1, ref2) {
+        return (ref1 != null) && (ref2 != null) && (ref1 === ref2 || (Array.isArray(ref1) && Array.isArray(ref1) && ref1.every((function(_this) {
+          return function(val, i) {
+            return _this.compareRefered(ref1[i], ref2[i]);
+          };
+        })(this))) || (typeof ref1 === "object" && typeof ref2 === "object" && Object.keys(ref1).join() === Object.keys(ref2).join() && Object.keys(ref1).every((function(_this) {
+          return function(key) {
+            return _this.compareRefered(ref1[key], ref2[key]);
+          };
+        })(this))));
       };
 
       return Binder;
@@ -472,8 +518,13 @@
     Updater.Binder = (function(superClass) {
       extend(Binder, superClass);
 
-      function Binder() {
-        return Binder.__super__.constructor.apply(this, arguments);
+      function Binder(target1, callback1) {
+        this.target = target1;
+        this.callback = callback1;
+        this.ref = {
+          target: this.target,
+          callback: this.callback
+        };
       }
 
       Binder.prototype.doBind = function() {
@@ -582,8 +633,8 @@
       }
 
       Timer.now = function() {
-        var ref1;
-        if ((typeof window !== "undefined" && window !== null ? (ref1 = window.performance) != null ? ref1.now : void 0 : void 0) != null) {
+        var ref3;
+        if ((typeof window !== "undefined" && window !== null ? (ref3 = window.performance) != null ? ref3.now : void 0 : void 0) != null) {
           return window.performance.now();
         } else if ((typeof process !== "undefined" && process !== null ? process.uptime : void 0) != null) {
           return process.uptime() * 1000;
@@ -773,9 +824,15 @@
     EventBind = (function(superClass) {
       extend(EventBind, superClass);
 
-      function EventBind(event1, target, callback) {
+      function EventBind(event1, target1, callback1) {
         this.event = event1;
-        EventBind.__super__.constructor.call(this, target, callback);
+        this.target = target1;
+        this.callback = callback1;
+        this.ref = {
+          event: this.event,
+          target: this.target,
+          callback: this.callback
+        };
       }
 
       EventBind.prototype.doBind = function() {
@@ -833,10 +890,11 @@
     Parallelio.Spark.Invalidator = definition();
     return Parallelio.Spark.Invalidator.definition = definition;
   })(function(dependencies) {
-    var EventBind, Invalidator, pluck;
+    var Binder, EventBind, Invalidator, pluck;
     if (dependencies == null) {
       dependencies = {};
     }
+    Binder = dependencies.hasOwnProperty("Binder") ? dependencies.Binder : Parallelio.Spark.Binder;
     EventBind = dependencies.hasOwnProperty("EventBind") ? dependencies.EventBind : Parallelio.Spark.EventBind;
     pluck = function(arr, fn) {
       var found, index;
@@ -849,16 +907,19 @@
         return null;
       }
     };
-    Invalidator = (function() {
+    Invalidator = (function(superClass) {
+      extend(Invalidator, superClass);
+
       Invalidator.strict = true;
 
-      function Invalidator(property1, obj1) {
+      function Invalidator(property1, obj3) {
         this.property = property1;
-        this.obj = obj1 != null ? obj1 : null;
+        this.obj = obj3 != null ? obj3 : null;
         this.invalidationEvents = [];
         this.recycled = [];
         this.unknowns = [];
         this.strict = this.constructor.strict;
+        this.invalidated = false;
         this.invalidateCallback = (function(_this) {
           return function() {
             _this.invalidate();
@@ -869,9 +930,14 @@
 
       Invalidator.prototype.invalidate = function() {
         var functName;
-        if (typeof this.property.invalidate === "function") {
+        this.invalidated = true;
+        if (typeof this.property === "function") {
+          return this.property();
+        } else if (typeof this.callback === "function") {
+          return this.callback();
+        } else if ((this.property != null) && typeof this.property.invalidate === "function") {
           return this.property.invalidate();
-        } else {
+        } else if (typeof this.property === "string") {
           functName = 'invalidate' + this.property.charAt(0).toUpperCase() + this.property.slice(1);
           if (typeof this.obj[functName] === "function") {
             return this.obj[functName]();
@@ -910,20 +976,36 @@
         var callback;
         callback = (function(_this) {
           return function() {
-            if (!_this.unknowns.some(function(unknown) {
-              return unknown.prop === prop && unknown.target === target;
-            })) {
-              _this.unknowns.push({
-                "prop": prop,
-                "target": target
-              });
-              return _this.unknown();
-            }
+            return _this.addUnknown(function() {
+              return target[prop];
+            }, prop, target);
           };
         })(this);
-        callback.maker = arguments.callee;
-        callback.uses = Array.from(arguments);
+        callback.ref = {
+          maker: arguments.callee,
+          prop: prop,
+          target: target
+        };
         return callback;
+      };
+
+      Invalidator.prototype.addUnknown = function(fn, prop, target) {
+        if (!this.findUnknown(prop, target)) {
+          fn.ref = {
+            "prop": prop,
+            "target": target
+          };
+          this.unknowns.push(fn);
+          return this.unknown();
+        }
+      };
+
+      Invalidator.prototype.findUnknown = function(prop, target) {
+        if ((prop != null) || (target != null)) {
+          return this.unknowns.find(function(unknown) {
+            return unknown.ref.prop === prop && unknown.ref.target === target;
+          });
+        }
       };
 
       Invalidator.prototype.event = function(event, target) {
@@ -970,6 +1052,24 @@
         return initiated;
       };
 
+      Invalidator.prototype.funct = function(funct) {
+        var invalidator, res;
+        invalidator = new Invalidator((function(_this) {
+          return function() {
+            return _this.addUnknown(function() {
+              var res2;
+              res2 = funct(invalidator);
+              if (res !== res2) {
+                return _this.invalidate();
+              }
+            }, invalidator);
+          };
+        })(this));
+        res = funct(invalidator);
+        this.invalidationEvents.push(invalidator);
+        return res;
+      };
+
       Invalidator.prototype.validateUnknowns = function(prop, target) {
         var unknowns;
         if (target == null) {
@@ -978,7 +1078,7 @@
         unknowns = this.unknowns;
         this.unknowns = [];
         return unknowns.forEach(function(unknown) {
-          return unknown.target[unknown.prop];
+          return unknown();
         });
       };
 
@@ -987,6 +1087,7 @@
       };
 
       Invalidator.prototype.bind = function() {
+        this.invalidated = false;
         return this.invalidationEvents.forEach(function(eventBind) {
           return eventBind.bind();
         });
@@ -1029,7 +1130,7 @@
 
       return Invalidator;
 
-    })();
+    })(Binder);
     return Invalidator;
   });
 
@@ -1288,6 +1389,14 @@
         }
       };
 
+      CollectionProperty.prototype.checkChangedItems = function(val, old) {
+        var compareFunction;
+        if (typeof this.collectionOptions.compare === 'function') {
+          compareFunction = this.collectionOptions.compare;
+        }
+        return (new Collection(val)).checkChanges(old, this.collectionOptions.ordered, compareFunction);
+      };
+
       CollectionProperty.prototype.output = function() {
         var col, prop, value;
         value = this.value;
@@ -1295,7 +1404,7 @@
           value = this.callOptionFunct("output", this.value);
         }
         prop = this;
-        col = Collection.newSubClass(this.property.options.collection, value);
+        col = Collection.newSubClass(this.collectionOptions, value);
         col.changed = function(old) {
           return prop.changed(old);
         };
@@ -1328,9 +1437,14 @@
         return CollectionProperty.__super__.hasChangedFunctions.call(this) || typeof this.property.options.itemAdded === 'function' || typeof this.property.options.itemRemoved === 'function';
       };
 
+      CollectionProperty.defaultCollectionOptions = {
+        compare: false,
+        ordered: true
+      };
+
       CollectionProperty.compose = function(prop) {
         if (prop.options.collection != null) {
-          return prop.instanceType = (function(superClass1) {
+          prop.instanceType = (function(superClass1) {
             extend(_Class, superClass1);
 
             function _Class() {
@@ -1340,6 +1454,10 @@
             return _Class;
 
           })(CollectionProperty);
+          prop.instanceType.prototype.collectionOptions = Object.assign({}, this.defaultCollectionOptions, typeof prop.options.collection === 'object' ? prop.options.collection : {});
+          if (prop.options.collection.compare != null) {
+            return prop.instanceType.prototype.checkChanges = this.prototype.checkChangedItems;
+          }
         }
       };
 
@@ -1375,7 +1493,7 @@
           old = this.value;
           initiated = this.initiated;
           this.calcul();
-          if (this.value !== old) {
+          if (this.checkChanges(this.value, old)) {
             if (initiated) {
               this.changed(old);
             } else if (typeof this.obj.emitEvent === 'function') {
@@ -1596,9 +1714,29 @@
           };
           fn.ref = {
             name: name,
-            obj: obj
+            obj: obj,
+            val: val
           };
           return this.push(fn);
+        }
+      };
+
+      Members.prototype.setValueRef = function(val, name, obj) {
+        var fn, i, ref;
+        i = this.findRefIndex(name, obj);
+        if (i === -1) {
+          return this.addValueRef(val, name, obj);
+        } else if (this.get(i).ref.val !== val) {
+          ref = {
+            name: name,
+            obj: obj,
+            val: val
+          };
+          fn = function(invalidator) {
+            return val;
+          };
+          fn.ref = ref;
+          return this.set(i, fn);
         }
       };
 
@@ -1677,13 +1815,13 @@
       };
 
       Property.prototype.override = function(parent) {
-        var key, ref1, results, value;
+        var key, ref3, results, value;
         if (this.options.parent == null) {
           this.options.parent = parent.options;
-          ref1 = parent.options;
+          ref3 = parent.options;
           results = [];
-          for (key in ref1) {
-            value = ref1[key];
+          for (key in ref3) {
+            value = ref3[key];
             if (typeof this.options[key] === 'function' && typeof value === 'function') {
               results.push(this.options[key].overrided = value);
             } else if (typeof this.options[key] === 'undefined') {
@@ -1697,12 +1835,12 @@
       };
 
       Property.prototype.checkFunctions = function(target) {
-        var funct, name, ref1, results;
+        var funct, name, ref3, results;
         this.checkAfterAddListener(target);
-        ref1 = Property.fn;
+        ref3 = Property.fn;
         results = [];
-        for (name in ref1) {
-          funct = ref1[name];
+        for (name in ref3) {
+          funct = ref3[name];
           if (typeof target[name] === 'undefined') {
             results.push(target[name] = funct);
           } else {
@@ -1891,7 +2029,7 @@
       };
 
       Element.extend = function(obj) {
-        var key, ref1, value;
+        var key, ref3, value;
         for (key in obj) {
           value = obj[key];
           if (indexOf.call(Element.elementKeywords, key) < 0) {
@@ -1901,8 +2039,8 @@
         if (obj.prototype != null) {
           this.include(obj.prototype);
         }
-        if ((ref1 = obj.extended) != null) {
-          ref1.apply(this);
+        if ((ref3 = obj.extended) != null) {
+          ref3.apply(this);
         }
         return this;
       };
@@ -1931,21 +2069,21 @@
       };
 
       Element.include = function(obj) {
-        var k, key, l, len, len1, property, ref1, ref2, ref3;
-        ref1 = this.getIncludableProperties(obj);
-        for (k = 0, len = ref1.length; k < len; k++) {
-          key = ref1[k];
+        var k, key, l, len, len1, property, ref3, ref4, ref5;
+        ref3 = this.getIncludableProperties(obj);
+        for (k = 0, len = ref3.length; k < len; k++) {
+          key = ref3[k];
           this.prototype[key] = obj[key];
         }
         if (obj._properties != null) {
-          ref2 = obj._properties;
-          for (l = 0, len1 = ref2.length; l < len1; l++) {
-            property = ref2[l];
+          ref4 = obj._properties;
+          for (l = 0, len1 = ref4.length; l < len1; l++) {
+            property = ref4[l];
             this.property(property.name, Object.assign({}, property.options));
           }
         }
-        if ((ref3 = obj.included) != null) {
-          ref3.apply(this);
+        if ((ref5 = obj.included) != null) {
+          ref5.apply(this);
         }
         return this;
       };
@@ -1968,134 +2106,6 @@
 
     })();
     return Element;
-  });
-
-  (function(definition) {
-    Parallelio.PathWalk = definition();
-    return Parallelio.PathWalk.definition = definition;
-  })(function(dependencies) {
-    var Element, PathWalk, Timing;
-    if (dependencies == null) {
-      dependencies = {};
-    }
-    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
-    Timing = dependencies.hasOwnProperty("Timing") ? dependencies.Timing : Parallelio.Timing;
-    PathWalk = (function(superClass) {
-      extend(PathWalk, superClass);
-
-      function PathWalk(walker, path1, options) {
-        this.walker = walker;
-        this.path = path1;
-        this.setProperties(options);
-        PathWalk.__super__.constructor.call(this);
-      }
-
-      PathWalk.properties({
-        speed: {
-          "default": 5
-        },
-        timing: {
-          calcul: function() {
-            return new Timing();
-          }
-        },
-        pathLength: {
-          calcul: function() {
-            return this.path.solution.getTotalLength();
-          }
-        },
-        totalTime: {
-          calcul: function() {
-            return this.pathLength / this.speed * 1000;
-          }
-        }
-      });
-
-      PathWalk.prototype.start = function() {
-        if (!this.path.solution) {
-          this.path.calcul();
-        }
-        if (this.path.solution) {
-          this.pathTimeout = this.timing.setTimeout((function(_this) {
-            return function() {
-              return _this.end();
-            };
-          })(this), this.totalTime);
-          return this.pathTimeout.updater.addCallback(this.callback('update'));
-        }
-      };
-
-      PathWalk.prototype.stop = function() {
-        return this.pathTimeout.pause();
-      };
-
-      PathWalk.prototype.update = function() {
-        var pos;
-        pos = this.path.getPosAtPrc(this.pathTimeout.getPrc());
-        this.walker.tile = pos.tile;
-        this.walker.offsetX = pos.offsetX;
-        return this.walker.offsetY = pos.offsetY;
-      };
-
-      PathWalk.prototype.end = function() {
-        this.update();
-        return this.destroy();
-      };
-
-      PathWalk.prototype.destroy = function() {
-        this.pathTimeout.destroy();
-        return this.destroyProperties();
-      };
-
-      return PathWalk;
-
-    })(Element);
-    return PathWalk;
-  });
-
-  (function(definition) {
-    Parallelio.Damageable = definition();
-    return Parallelio.Damageable.definition = definition;
-  })(function(dependencies) {
-    var Damageable, Element;
-    if (dependencies == null) {
-      dependencies = {};
-    }
-    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
-    Damageable = (function(superClass) {
-      extend(Damageable, superClass);
-
-      function Damageable() {
-        return Damageable.__super__.constructor.apply(this, arguments);
-      }
-
-      Damageable.properties({
-        damageable: {
-          "default": true
-        },
-        maxHealth: {
-          "default": 1000
-        },
-        health: {
-          "default": 1000,
-          change: function() {
-            if (this.health === 0) {
-              return this.whenNoHealth();
-            }
-          }
-        }
-      });
-
-      Damageable.prototype.damage = function(val) {
-        return this.health = Math.max(0, this.health - val);
-      };
-
-      Damageable.prototype.whenNoHealth = function() {};
-
-      return Damageable;
-
-    })(Element);
-    return Damageable;
   });
 
   (function(definition) {
@@ -2201,10 +2211,10 @@
       };
 
       PathFinder.prototype.getTile = function(x, y) {
-        var ref1;
+        var ref3;
         if (this.tilesContainer.getTile != null) {
           return this.tilesContainer.getTile(x, y);
-        } else if (((ref1 = this.tilesContainer[y]) != null ? ref1[x] : void 0) != null) {
+        } else if (((ref3 = this.tilesContainer[y]) != null ? ref3[x] : void 0) != null) {
           return {
             x: x,
             y: y,
@@ -2237,15 +2247,15 @@
       };
 
       PathFinder.prototype.addNextSteps = function(step) {
-        var k, len, next, ref1, results, tile;
+        var k, len, next, ref3, results, tile;
         if (step == null) {
           step = null;
         }
         tile = step != null ? step.nextTile : this.from;
-        ref1 = this.getConnectedToTile(tile);
+        ref3 = this.getConnectedToTile(tile);
         results = [];
-        for (k = 0, len = ref1.length; k < len; k++) {
-          next = ref1[k];
+        for (k = 0, len = ref3.length; k < len; k++) {
+          next = ref3[k];
           if (this.tileIsValid(next)) {
             results.push(this.addStep(new PathFinder.Step(this, (step != null ? step : null), tile, next)));
           } else {
@@ -2494,20 +2504,20 @@
       });
 
       Door.prototype.updateTileMembers = function(old) {
-        var ref1, ref2, ref3, ref4;
+        var ref3, ref4, ref5, ref6;
         if (old != null) {
-          if ((ref1 = old.walkableMembers) != null) {
-            ref1.removeRef('open', this);
+          if ((ref3 = old.walkableMembers) != null) {
+            ref3.removeRef('open', this);
           }
-          if ((ref2 = old.transparentMembers) != null) {
-            ref2.removeRef('open', this);
+          if ((ref4 = old.transparentMembers) != null) {
+            ref4.removeRef('open', this);
           }
         }
         if (this.tile) {
-          if ((ref3 = this.tile.walkableMembers) != null) {
-            ref3.addPropertyRef('open', this);
+          if ((ref5 = this.tile.walkableMembers) != null) {
+            ref5.addPropertyRef('open', this);
           }
-          return (ref4 = this.tile.transparentMembers) != null ? ref4.addPropertyRef('open', this) : void 0;
+          return (ref6 = this.tile.transparentMembers) != null ? ref6.addPropertyRef('open', this) : void 0;
         }
       };
 
@@ -2520,6 +2530,134 @@
 
     })(Tiled);
     return Door;
+  });
+
+  (function(definition) {
+    Parallelio.PathWalk = definition();
+    return Parallelio.PathWalk.definition = definition;
+  })(function(dependencies) {
+    var Element, PathWalk, Timing;
+    if (dependencies == null) {
+      dependencies = {};
+    }
+    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
+    Timing = dependencies.hasOwnProperty("Timing") ? dependencies.Timing : Parallelio.Timing;
+    PathWalk = (function(superClass) {
+      extend(PathWalk, superClass);
+
+      function PathWalk(walker, path1, options) {
+        this.walker = walker;
+        this.path = path1;
+        this.setProperties(options);
+        PathWalk.__super__.constructor.call(this);
+      }
+
+      PathWalk.properties({
+        speed: {
+          "default": 5
+        },
+        timing: {
+          calcul: function() {
+            return new Timing();
+          }
+        },
+        pathLength: {
+          calcul: function() {
+            return this.path.solution.getTotalLength();
+          }
+        },
+        totalTime: {
+          calcul: function() {
+            return this.pathLength / this.speed * 1000;
+          }
+        }
+      });
+
+      PathWalk.prototype.start = function() {
+        if (!this.path.solution) {
+          this.path.calcul();
+        }
+        if (this.path.solution) {
+          this.pathTimeout = this.timing.setTimeout((function(_this) {
+            return function() {
+              return _this.end();
+            };
+          })(this), this.totalTime);
+          return this.pathTimeout.updater.addCallback(this.callback('update'));
+        }
+      };
+
+      PathWalk.prototype.stop = function() {
+        return this.pathTimeout.pause();
+      };
+
+      PathWalk.prototype.update = function() {
+        var pos;
+        pos = this.path.getPosAtPrc(this.pathTimeout.getPrc());
+        this.walker.tile = pos.tile;
+        this.walker.offsetX = pos.offsetX;
+        return this.walker.offsetY = pos.offsetY;
+      };
+
+      PathWalk.prototype.end = function() {
+        this.update();
+        return this.destroy();
+      };
+
+      PathWalk.prototype.destroy = function() {
+        this.pathTimeout.destroy();
+        return this.destroyProperties();
+      };
+
+      return PathWalk;
+
+    })(Element);
+    return PathWalk;
+  });
+
+  (function(definition) {
+    Parallelio.Damageable = definition();
+    return Parallelio.Damageable.definition = definition;
+  })(function(dependencies) {
+    var Damageable, Element;
+    if (dependencies == null) {
+      dependencies = {};
+    }
+    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
+    Damageable = (function(superClass) {
+      extend(Damageable, superClass);
+
+      function Damageable() {
+        return Damageable.__super__.constructor.apply(this, arguments);
+      }
+
+      Damageable.properties({
+        damageable: {
+          "default": true
+        },
+        maxHealth: {
+          "default": 1000
+        },
+        health: {
+          "default": 1000,
+          change: function() {
+            if (this.health === 0) {
+              return this.whenNoHealth();
+            }
+          }
+        }
+      });
+
+      Damageable.prototype.damage = function(val) {
+        return this.health = Math.max(0, this.health - val);
+      };
+
+      Damageable.prototype.whenNoHealth = function() {};
+
+      return Damageable;
+
+    })(Element);
+    return Damageable;
   });
 
   (function(definition) {
@@ -2598,20 +2736,20 @@
       });
 
       AutomaticDoor.prototype.updateTileMembers = function(old) {
-        var ref1, ref2, ref3, ref4;
+        var ref3, ref4, ref5, ref6;
         if (old != null) {
-          if ((ref1 = old.walkableMembers) != null) {
-            ref1.removeRef('unlocked', this);
+          if ((ref3 = old.walkableMembers) != null) {
+            ref3.removeRef('unlocked', this);
           }
-          if ((ref2 = old.transparentMembers) != null) {
-            ref2.removeRef('open', this);
+          if ((ref4 = old.transparentMembers) != null) {
+            ref4.removeRef('open', this);
           }
         }
         if (this.tile) {
-          if ((ref3 = this.tile.walkableMembers) != null) {
-            ref3.addPropertyRef('unlocked', this);
+          if ((ref5 = this.tile.walkableMembers) != null) {
+            ref5.addPropertyRef('unlocked', this);
           }
-          return (ref4 = this.tile.transparentMembers) != null ? ref4.addPropertyRef('open', this) : void 0;
+          return (ref6 = this.tile.transparentMembers) != null ? ref6.addPropertyRef('open', this) : void 0;
         }
       };
 
@@ -2840,11 +2978,11 @@
       };
 
       DamagePropagation.prototype.apply = function() {
-        var damage, k, len, ref1, results;
-        ref1 = this.getDamaged();
+        var damage, k, len, ref3, results;
+        ref3 = this.getDamaged();
         results = [];
-        for (k = 0, len = ref1.length; k < len; k++) {
-          damage = ref1[k];
+        for (k = 0, len = ref3.length; k < len; k++) {
+          damage = ref3[k];
           results.push(damage.target.damage(damage.damage));
         }
         return results;
@@ -2904,16 +3042,16 @@
       };
 
       DamagePropagation.prototype.extend = function(damaged) {
-        var added, ctn, damage, dir, dmg, existing, k, l, len, len1, len2, local, m, ref1, target, tile;
+        var added, ctn, damage, dir, dmg, existing, k, l, len, len1, len2, local, m, ref3, target, tile;
         ctn = this.getTileContainer();
         added = [];
         for (k = 0, len = damaged.length; k < len; k++) {
           damage = damaged[k];
           local = [];
           if (damage.target.x != null) {
-            ref1 = Direction.adjacents;
-            for (l = 0, len1 = ref1.length; l < len1; l++) {
-              dir = ref1[l];
+            ref3 = Direction.adjacents;
+            for (l = 0, len1 = ref3.length; l < len1; l++) {
+              dir = ref3[l];
               tile = ctn.getTile(damage.target.x + dir.x, damage.target.y + dir.y);
               if ((tile != null) && tile.damageable && this.inDamaged(tile, this._damaged) === false) {
                 local.push(tile);
@@ -3081,7 +3219,7 @@
       });
 
       Explosive.prototype.getDamaged = function() {
-        var angle, inside, k, ref1, shard, shardPower, shards, target;
+        var angle, inside, k, ref3, shard, shardPower, shards, target;
         this._damaged = [];
         shards = Math.pow(this.range + 1, 2);
         shardPower = this.power / shards;
@@ -3089,7 +3227,7 @@
         if (inside) {
           shardPower *= 4;
         }
-        for (shard = k = 0, ref1 = shards; 0 <= ref1 ? k <= ref1 : k >= ref1; shard = 0 <= ref1 ? ++k : --k) {
+        for (shard = k = 0, ref3 = shards; 0 <= ref3 ? k <= ref3 : k >= ref3; shard = 0 <= ref3 ? ++k : --k) {
           angle = this.rng() * Math.PI * 2;
           target = this.getTileHitByShard(inside, angle);
           if (target != null) {
@@ -3244,8 +3382,8 @@
       };
 
       Tile.prototype.dist = function(tile) {
-        var ctnDist, ref1, x, y;
-        if (((tile != null ? tile.x : void 0) != null) && (tile.y != null) && (this.x != null) && (this.y != null) && (this.container === tile.container || (ctnDist = (ref1 = this.container) != null ? typeof ref1.dist === "function" ? ref1.dist(tile.container) : void 0 : void 0))) {
+        var ctnDist, ref3, x, y;
+        if (((tile != null ? tile.x : void 0) != null) && (tile.y != null) && (this.x != null) && (this.y != null) && (this.container === tile.container || (ctnDist = (ref3 = this.container) != null ? typeof ref3.dist === "function" ? ref3.dist(tile.container) : void 0 : void 0))) {
           x = tile.x - this.x;
           y = tile.y - this.y;
           if (ctnDist) {
@@ -3297,6 +3435,1079 @@
 
     })(Tile);
     return Floor;
+  });
+
+  (function(definition) {
+    Parallelio.Projectile = definition();
+    return Parallelio.Projectile.definition = definition;
+  })(function(dependencies) {
+    var Element, Projectile, Timing;
+    if (dependencies == null) {
+      dependencies = {};
+    }
+    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
+    Timing = dependencies.hasOwnProperty("Timing") ? dependencies.Timing : Parallelio.Timing;
+    Projectile = (function(superClass) {
+      extend(Projectile, superClass);
+
+      function Projectile(options) {
+        this.setProperties(options);
+        this.init();
+      }
+
+      Projectile.prototype.init = function() {};
+
+      Projectile.properties({
+        origin: {
+          "default": null
+        },
+        target: {
+          "default": null
+        },
+        power: {
+          "default": 10
+        },
+        blastRange: {
+          "default": 1
+        },
+        propagationType: {
+          "default": null
+        },
+        speed: {
+          "default": 10
+        },
+        pathLength: {
+          calcul: function() {
+            var dist;
+            if ((this.originTile != null) && (this.targetTile != null)) {
+              dist = this.originTile.dist(this.targetTile);
+              if (dist) {
+                return dist.length;
+              }
+            }
+            return 100;
+          }
+        },
+        originTile: {
+          calcul: function(invalidator) {
+            var origin;
+            origin = invalidator.prop('origin');
+            if (origin != null) {
+              return origin.tile || origin;
+            }
+          }
+        },
+        targetTile: {
+          calcul: function(invalidator) {
+            var target;
+            target = invalidator.prop('target');
+            if (target != null) {
+              return target.tile || target;
+            }
+          }
+        },
+        container: {
+          calcul: function(invalidate) {
+            var originTile, targetTile;
+            originTile = invalidate.prop('originTile');
+            targetTile = invalidate.prop('targetTile');
+            if (originTile.container === targetTile.container) {
+              return originTile.container;
+            } else if (invalidate.prop('prcPath') > 0.5) {
+              return targetTile.container;
+            } else {
+              return originTile.container;
+            }
+          }
+        },
+        x: {
+          calcul: function(invalidate) {
+            var startPos;
+            startPos = invalidate.prop('startPos');
+            return (invalidate.prop('targetPos').x - startPos.x) * invalidate.prop('prcPath') + startPos.x;
+          }
+        },
+        y: {
+          calcul: function(invalidate) {
+            var startPos;
+            startPos = invalidate.prop('startPos');
+            return (invalidate.prop('targetPos').y - startPos.y) * invalidate.prop('prcPath') + startPos.y;
+          }
+        },
+        startPos: {
+          calcul: function(invalidate) {
+            var container, dist, offset, originTile;
+            originTile = invalidate.prop('originTile');
+            container = invalidate.prop('container');
+            offset = this.startOffset;
+            if (originTile.container !== container) {
+              dist = container.dist(originTile.container);
+              offset.x += dist.x;
+              offset.y += dist.y;
+            }
+            return {
+              x: originTile.x + offset.x,
+              y: originTile.y + offset.y
+            };
+          },
+          output: function(val) {
+            return Object.assign({}, val);
+          }
+        },
+        targetPos: {
+          calcul: function(invalidate) {
+            var container, dist, offset, targetTile;
+            targetTile = invalidate.prop('targetTile');
+            container = invalidate.prop('container');
+            offset = this.targetOffset;
+            if (targetTile.container !== container) {
+              dist = container.dist(targetTile.container);
+              offset.x += dist.x;
+              offset.y += dist.y;
+            }
+            return {
+              x: targetTile.x + offset.x,
+              y: targetTile.y + offset.y
+            };
+          },
+          output: function(val) {
+            return Object.assign({}, val);
+          }
+        },
+        startOffset: {
+          "default": {
+            x: 0.5,
+            y: 0.5
+          },
+          output: function(val) {
+            return Object.assign({}, val);
+          }
+        },
+        targetOffset: {
+          "default": {
+            x: 0.5,
+            y: 0.5
+          },
+          output: function(val) {
+            return Object.assign({}, val);
+          }
+        },
+        prcPath: {
+          calcul: function() {
+            var ref3;
+            return ((ref3 = this.pathTimeout) != null ? ref3.getPrc() : void 0) || 0;
+          }
+        },
+        timing: {
+          calcul: function() {
+            return new Timing();
+          }
+        },
+        moving: {
+          "default": false
+        }
+      });
+
+      Projectile.prototype.launch = function() {
+        this.moving = true;
+        return this.pathTimeout = this.timing.setTimeout((function(_this) {
+          return function() {
+            _this.deliverPayload();
+            return _this.moving = false;
+          };
+        })(this), this.pathLength / this.speed * 1000);
+      };
+
+      Projectile.prototype.deliverPayload = function() {
+        var payload;
+        payload = new this.propagationType({
+          tile: this.target.tile || this.target,
+          power: this.power,
+          range: this.blastRange
+        });
+        payload.apply();
+        this.payloadDelivered();
+        return payload;
+      };
+
+      Projectile.prototype.payloadDelivered = function() {
+        return this.destroy();
+      };
+
+      Projectile.prototype.destroy = function() {
+        return this.destroyProperties();
+      };
+
+      return Projectile;
+
+    })(Element);
+    return Projectile;
+  });
+
+  (function(definition) {
+    Parallelio.TileContainer = definition();
+    return Parallelio.TileContainer.definition = definition;
+  })(function(dependencies) {
+    var Element, TileContainer;
+    if (dependencies == null) {
+      dependencies = {};
+    }
+    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
+    TileContainer = (function(superClass) {
+      extend(TileContainer, superClass);
+
+      function TileContainer() {
+        this.init();
+      }
+
+      TileContainer.properties({
+        boundaries: {
+          calcul: function() {
+            var boundaries;
+            boundaries = {
+              top: null,
+              left: null,
+              bottom: null,
+              right: null
+            };
+            this.tiles.forEach((function(_this) {
+              return function(tile) {
+                return _this._addToBondaries(tile, boundaries);
+              };
+            })(this));
+            return boundaries;
+          },
+          output: function(val) {
+            return Object.assign({}, val);
+          }
+        }
+      });
+
+      TileContainer.prototype._addToBondaries = function(tile, boundaries) {
+        if ((boundaries.top == null) || tile.y < boundaries.top) {
+          boundaries.top = tile.y;
+        }
+        if ((boundaries.left == null) || tile.x < boundaries.left) {
+          boundaries.left = tile.x;
+        }
+        if ((boundaries.bottom == null) || tile.y > boundaries.bottom) {
+          boundaries.bottom = tile.y;
+        }
+        if ((boundaries.right == null) || tile.x > boundaries.right) {
+          return boundaries.right = tile.x;
+        }
+      };
+
+      TileContainer.prototype.init = function() {
+        this.coords = {};
+        return this.tiles = [];
+      };
+
+      TileContainer.prototype.addTile = function(tile) {
+        var ref3;
+        if (!this.tiles.includes(tile)) {
+          this.tiles.push(tile);
+          if (this.coords[tile.x] == null) {
+            this.coords[tile.x] = {};
+          }
+          this.coords[tile.x][tile.y] = tile;
+          tile.container = this;
+          if ((ref3 = this._boundaries) != null ? ref3.calculated : void 0) {
+            this._addToBondaries(tile, this._boundaries.value);
+          }
+        }
+        return this;
+      };
+
+      TileContainer.prototype.removeTile = function(tile) {
+        var index, ref3;
+        index = this.tiles.indexOf(tile);
+        if (index > -1) {
+          this.tiles.splice(index, 1);
+          delete this.coords[tile.x][tile.y];
+          tile.container = null;
+          if ((ref3 = this._boundaries) != null ? ref3.calculated : void 0) {
+            if (this.boundaries.top === tile.y || this.boundaries.bottom === tile.y || this.boundaries.left === tile.x || this.boundaries.right === tile.x) {
+              return this.invalidateBoundaries();
+            }
+          }
+        }
+      };
+
+      TileContainer.prototype.removeTileAt = function(x, y) {
+        var tile;
+        if (tile = this.getTile(x, y)) {
+          return this.removeTile(tile);
+        }
+      };
+
+      TileContainer.prototype.getTile = function(x, y) {
+        var ref3;
+        if (((ref3 = this.coords[x]) != null ? ref3[y] : void 0) != null) {
+          return this.coords[x][y];
+        }
+      };
+
+      TileContainer.prototype.loadMatrix = function(matrix) {
+        var options, row, tile, x, y;
+        for (y in matrix) {
+          row = matrix[y];
+          for (x in row) {
+            tile = row[x];
+            options = {
+              x: parseInt(x),
+              y: parseInt(y)
+            };
+            if (typeof tile === "function") {
+              this.addTile(tile(options));
+            } else {
+              tile.x = options.x;
+              tile.y = options.y;
+              this.addTile(tile);
+            }
+          }
+        }
+        return this;
+      };
+
+      TileContainer.prototype.inRange = function(tile, range) {
+        var found, k, l, ref3, ref4, ref5, ref6, tiles, x, y;
+        tiles = [];
+        range--;
+        for (x = k = ref3 = tile.x - range, ref4 = tile.x + range; ref3 <= ref4 ? k <= ref4 : k >= ref4; x = ref3 <= ref4 ? ++k : --k) {
+          for (y = l = ref5 = tile.y - range, ref6 = tile.y + range; ref5 <= ref6 ? l <= ref6 : l >= ref6; y = ref5 <= ref6 ? ++l : --l) {
+            if (Math.sqrt((x - tile.x) * (x - tile.x) + (y - tile.y) * (y - tile.y)) <= range && ((found = this.getTile(x, y)) != null)) {
+              tiles.push(found);
+            }
+          }
+        }
+        return tiles;
+      };
+
+      TileContainer.prototype.allTiles = function() {
+        return this.tiles.slice();
+      };
+
+      TileContainer.prototype.clearAll = function() {
+        var k, len, ref3, tile;
+        ref3 = this.tiles;
+        for (k = 0, len = ref3.length; k < len; k++) {
+          tile = ref3[k];
+          tile.container = null;
+        }
+        this.coords = {};
+        this.tiles = [];
+        return this;
+      };
+
+      return TileContainer;
+
+    })(Element);
+    return TileContainer;
+  });
+
+  (function(definition) {
+    Parallelio.RoomGenerator = definition();
+    return Parallelio.RoomGenerator.definition = definition;
+  })(function(dependencies) {
+    var Door, Element, RoomGenerator, Tile, TileContainer;
+    if (dependencies == null) {
+      dependencies = {};
+    }
+    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
+    TileContainer = dependencies.hasOwnProperty("TileContainer") ? dependencies.TileContainer : Parallelio.TileContainer;
+    Tile = dependencies.hasOwnProperty("Tile") ? dependencies.Tile : Parallelio.Tile;
+    Door = dependencies.hasOwnProperty("Door") ? dependencies.Door : Parallelio.Door;
+    RoomGenerator = (function(superClass) {
+      extend(RoomGenerator, superClass);
+
+      function RoomGenerator(options) {
+        this.setProperties(options);
+        this.directions = [
+          {
+            x: 1,
+            y: 0
+          }, {
+            x: -1,
+            y: 0
+          }, {
+            x: 0,
+            y: 1
+          }, {
+            x: 0,
+            y: -1
+          }
+        ];
+        this.corners = [
+          {
+            x: 1,
+            y: 1
+          }, {
+            x: -1,
+            y: -1
+          }, {
+            x: -1,
+            y: 1
+          }, {
+            x: 1,
+            y: -1
+          }
+        ];
+        this.allDirections = this.directions.concat(this.corners);
+      }
+
+      RoomGenerator.properties({
+        rng: {
+          "default": Math.random
+        },
+        maxVolume: {
+          "default": 25
+        },
+        minVolume: {
+          "default": 50
+        },
+        width: {
+          "default": 30
+        },
+        height: {
+          "default": 15
+        },
+        tiles: {
+          calcul: function() {
+            var k, l, ref3, ref4, tiles, x, y;
+            tiles = new TileContainer();
+            for (x = k = 0, ref3 = this.width; 0 <= ref3 ? k <= ref3 : k >= ref3; x = 0 <= ref3 ? ++k : --k) {
+              for (y = l = 0, ref4 = this.height; 0 <= ref4 ? l <= ref4 : l >= ref4; y = 0 <= ref4 ? ++l : --l) {
+                tiles.addTile(new Tile(x, y));
+              }
+            }
+            return tiles;
+          }
+        },
+        floorFactory: {
+          "default": function(opt) {
+            return new Tile(opt.x, opt.y);
+          }
+        },
+        wallFactory: {
+          "default": null
+        },
+        doorFactory: {
+          calcul: function() {
+            return this.floorFactory;
+          }
+        }
+      });
+
+      RoomGenerator.prototype.init = function() {
+        this.finalTiles = null;
+        this.rooms = [];
+        return this.free = this.tiles.allTiles().filter((function(_this) {
+          return function(tile) {
+            var direction, k, len, next, ref3;
+            ref3 = _this.allDirections;
+            for (k = 0, len = ref3.length; k < len; k++) {
+              direction = ref3[k];
+              next = _this.tiles.getTile(tile.x + direction.x, tile.y + direction.y);
+              if (next == null) {
+                return false;
+              }
+            }
+            return true;
+          };
+        })(this));
+      };
+
+      RoomGenerator.prototype.calcul = function() {
+        var i;
+        this.init();
+        i = 0;
+        while (this.step() || this.newRoom()) {
+          i++;
+        }
+        this.createDoors();
+        this.rooms;
+        return this.makeFinalTiles();
+      };
+
+      RoomGenerator.prototype.makeFinalTiles = function() {
+        return this.finalTiles = this.tiles.allTiles().map((function(_this) {
+          return function(tile) {
+            var opt;
+            if (tile.factory != null) {
+              opt = {
+                x: tile.x,
+                y: tile.y
+              };
+              if (tile.factoryOptions != null) {
+                opt = Object.assign(opt, tile.factoryOptions);
+              }
+              return tile.factory(opt);
+            }
+          };
+        })(this)).filter((function(_this) {
+          return function(tile) {
+            return tile != null;
+          };
+        })(this));
+      };
+
+      RoomGenerator.prototype.getTiles = function() {
+        if (this.finalTiles == null) {
+          this.calcul();
+        }
+        return this.finalTiles;
+      };
+
+      RoomGenerator.prototype.newRoom = function() {
+        if (this.free.length) {
+          this.volume = Math.floor(this.rng() * (this.maxVolume - this.minVolume)) + this.minVolume;
+          return this.room = new RoomGenerator.Room();
+        }
+      };
+
+      RoomGenerator.prototype.randomDirections = function() {
+        var i, j, o, x;
+        o = this.directions.slice();
+        j = void 0;
+        x = void 0;
+        i = o.length;
+        while (i) {
+          j = Math.floor(this.rng() * i);
+          x = o[--i];
+          o[i] = o[j];
+          o[j] = x;
+        }
+        return o;
+      };
+
+      RoomGenerator.prototype.step = function() {
+        var success, tries;
+        if (this.room) {
+          if (this.free.length && this.room.tiles.length < this.volume - 1) {
+            if (this.room.tiles.length) {
+              tries = this.randomDirections();
+              success = false;
+              while (tries.length && !success) {
+                success = this.expand(this.room, tries.pop(), this.volume);
+              }
+              if (!success) {
+                this.roomDone();
+              }
+              return success;
+            } else {
+              this.allocateTile(this.randomFreeTile(), this.room);
+              return true;
+            }
+          } else {
+            this.roomDone();
+            return false;
+          }
+        }
+      };
+
+      RoomGenerator.prototype.roomDone = function() {
+        this.rooms.push(this.room);
+        this.allocateWalls(this.room);
+        return this.room = null;
+      };
+
+      RoomGenerator.prototype.expand = function(room, direction, max) {
+        var k, len, next, ref3, second, success, tile;
+        if (max == null) {
+          max = 0;
+        }
+        success = false;
+        ref3 = room.tiles;
+        for (k = 0, len = ref3.length; k < len; k++) {
+          tile = ref3[k];
+          if (max === 0 || room.tiles.length < max) {
+            if (next = this.tileOffsetIsFree(tile, direction)) {
+              this.allocateTile(next, room);
+              success = true;
+            }
+            if ((second = this.tileOffsetIsFree(tile, direction, 2)) && !this.tileOffsetIsFree(tile, direction, 3)) {
+              this.allocateTile(second, room);
+            }
+          }
+        }
+        return success;
+      };
+
+      RoomGenerator.prototype.allocateWalls = function(room) {
+        var direction, k, len, next, nextRoom, otherSide, ref3, results, tile;
+        ref3 = room.tiles;
+        results = [];
+        for (k = 0, len = ref3.length; k < len; k++) {
+          tile = ref3[k];
+          results.push((function() {
+            var l, len1, ref4, results1;
+            ref4 = this.allDirections;
+            results1 = [];
+            for (l = 0, len1 = ref4.length; l < len1; l++) {
+              direction = ref4[l];
+              next = this.tiles.getTile(tile.x + direction.x, tile.y + direction.y);
+              if ((next != null) && next.room !== room) {
+                if (indexOf.call(this.corners, direction) < 0) {
+                  otherSide = this.tiles.getTile(tile.x + direction.x * 2, tile.y + direction.y * 2);
+                  nextRoom = (otherSide != null ? otherSide.room : void 0) != null ? otherSide.room : null;
+                  room.addWall(next, nextRoom);
+                  if (nextRoom != null) {
+                    nextRoom.addWall(next, room);
+                  }
+                }
+                next.factory = this.wallFactory;
+                results1.push(this.allocateTile(next));
+              } else {
+                results1.push(void 0);
+              }
+            }
+            return results1;
+          }).call(this));
+        }
+        return results;
+      };
+
+      RoomGenerator.prototype.createDoors = function() {
+        var door, k, len, ref3, results, room, walls;
+        ref3 = this.rooms;
+        results = [];
+        for (k = 0, len = ref3.length; k < len; k++) {
+          room = ref3[k];
+          results.push((function() {
+            var l, len1, ref4, results1;
+            ref4 = room.wallsByRooms();
+            results1 = [];
+            for (l = 0, len1 = ref4.length; l < len1; l++) {
+              walls = ref4[l];
+              if ((walls.room != null) && room.doorsForRoom(walls.room) < 1) {
+                door = walls.tiles[Math.floor(this.rng() * walls.tiles.length)];
+                door.factory = this.doorFactory;
+                door.factoryOptions = {
+                  direction: this.tiles.getTile(door.x + 1, door.y).factory === this.floorFactory ? Door.directions.vertical : Door.directions.horizontal
+                };
+                room.addDoor(door, walls.room);
+                results1.push(walls.room.addDoor(door, room));
+              } else {
+                results1.push(void 0);
+              }
+            }
+            return results1;
+          }).call(this));
+        }
+        return results;
+      };
+
+      RoomGenerator.prototype.allocateTile = function(tile, room) {
+        var index;
+        if (room == null) {
+          room = null;
+        }
+        if (room != null) {
+          room.addTile(tile);
+          tile.factory = this.floorFactory;
+        }
+        index = this.free.indexOf(tile);
+        if (index > -1) {
+          return this.free.splice(index, 1);
+        }
+      };
+
+      RoomGenerator.prototype.tileOffsetIsFree = function(tile, direction, multiply) {
+        if (multiply == null) {
+          multiply = 1;
+        }
+        return this.tileIsFree(tile.x + direction.x * multiply, tile.y + direction.y * multiply);
+      };
+
+      RoomGenerator.prototype.tileIsFree = function(x, y) {
+        var tile;
+        tile = this.tiles.getTile(x, y);
+        if ((tile != null) && indexOf.call(this.free, tile) >= 0) {
+          return tile;
+        } else {
+          return false;
+        }
+      };
+
+      RoomGenerator.prototype.randomFreeTile = function() {
+        return this.free[Math.floor(this.rng() * this.free.length)];
+      };
+
+      return RoomGenerator;
+
+    })(Element);
+    RoomGenerator.Room = (function() {
+      function Room() {
+        this.tiles = [];
+        this.walls = [];
+        this.doors = [];
+      }
+
+      Room.prototype.addTile = function(tile) {
+        this.tiles.push(tile);
+        return tile.room = this;
+      };
+
+      Room.prototype.containsWall = function(tile) {
+        var k, len, ref3, wall;
+        ref3 = this.walls;
+        for (k = 0, len = ref3.length; k < len; k++) {
+          wall = ref3[k];
+          if (wall.tile === tile) {
+            return wall;
+          }
+        }
+        return false;
+      };
+
+      Room.prototype.addWall = function(tile, nextRoom) {
+        var existing;
+        existing = this.containsWall(tile);
+        if (existing) {
+          return existing.nextRoom = nextRoom;
+        } else {
+          return this.walls.push({
+            tile: tile,
+            nextRoom: nextRoom
+          });
+        }
+      };
+
+      Room.prototype.wallsByRooms = function() {
+        var k, len, pos, ref3, res, rooms, wall;
+        rooms = [];
+        res = [];
+        ref3 = this.walls;
+        for (k = 0, len = ref3.length; k < len; k++) {
+          wall = ref3[k];
+          pos = rooms.indexOf(wall.nextRoom);
+          if (pos === -1) {
+            pos = rooms.length;
+            rooms.push(wall.nextRoom);
+            res.push({
+              room: wall.nextRoom,
+              tiles: []
+            });
+          }
+          res[pos].tiles.push(wall.tile);
+        }
+        return res;
+      };
+
+      Room.prototype.addDoor = function(tile, nextRoom) {
+        return this.doors.push({
+          tile: tile,
+          nextRoom: nextRoom
+        });
+      };
+
+      Room.prototype.doorsForRoom = function(room) {
+        var door, k, len, ref3, res;
+        res = [];
+        ref3 = this.doors;
+        for (k = 0, len = ref3.length; k < len; k++) {
+          door = ref3[k];
+          if (door.nextRoom === room) {
+            res.push(door.tile);
+          }
+        }
+        return res;
+      };
+
+      return Room;
+
+    })();
+    return RoomGenerator;
+  });
+
+  (function(definition) {
+    Parallelio.Star = definition();
+    return Parallelio.Star.definition = definition;
+  })(function(dependencies) {
+    var Element, Star;
+    if (dependencies == null) {
+      dependencies = {};
+    }
+    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
+    Star = (function(superClass) {
+      extend(Star, superClass);
+
+      function Star(x5, y5) {
+        this.x = x5;
+        this.y = y5;
+        this.init();
+      }
+
+      Star.properties({
+        x: {},
+        y: {},
+        links: {
+          collection: {
+            findStar: function(star) {
+              return this.find(function(link) {
+                return link.star2 === star || link.star1 === star;
+              });
+            }
+          }
+        }
+      });
+
+      Star.prototype.init = function() {};
+
+      Star.prototype.linkTo = function(star) {
+        if (!this.links.findStar(star)) {
+          return this.addLink(new this.constructor.Link(this, star));
+        }
+      };
+
+      Star.prototype.addLink = function(link) {
+        this.links.add(link);
+        link.otherStar(this).links.add(link);
+        return link;
+      };
+
+      Star.prototype.dist = function(x, y) {
+        var xDist, yDist;
+        xDist = this.x - x;
+        yDist = this.y - y;
+        return Math.sqrt((xDist * xDist) + (yDist * yDist));
+      };
+
+      Star.collenctionFn = {
+        closest: function(x, y) {
+          var min, minDist;
+          min = null;
+          minDist = null;
+          this.forEach(function(star) {
+            var dist;
+            dist = star.dist(x, y);
+            if ((min == null) || minDist > dist) {
+              min = star;
+              return minDist = dist;
+            }
+          });
+          return min;
+        },
+        closests: function(x, y) {
+          var dists;
+          dists = this.map(function(star) {
+            return {
+              dist: star.dist(x, y),
+              star: star
+            };
+          });
+          dists.sort(function(a, b) {
+            return a.dist - b.dist;
+          });
+          return this.copy(dists.map(function(dist) {
+            return dist.star;
+          }));
+        }
+      };
+
+      return Star;
+
+    })(Element);
+    Star.Link = (function(superClass) {
+      extend(Link, superClass);
+
+      function Link(star1, star2) {
+        this.star1 = star1;
+        this.star2 = star2;
+      }
+
+      Link.prototype.remove = function() {
+        this.star1.links.remove(this);
+        return this.star2.links.remove(this);
+      };
+
+      Link.prototype.otherStar = function(star) {
+        if (star === this.star1) {
+          return this.star2;
+        } else {
+          return this.star1;
+        }
+      };
+
+      Link.prototype.getLength = function() {
+        return this.star1.dist(this.star2.x, this.star2.y);
+      };
+
+      Link.prototype.inBoundaryBox = function(x, y, padding) {
+        var x1, x2, y1, y2;
+        if (padding == null) {
+          padding = 0;
+        }
+        x1 = Math.min(this.star1.x, this.star2.x) - padding;
+        y1 = Math.min(this.star1.y, this.star2.y) - padding;
+        x2 = Math.max(this.star1.x, this.star2.x) + padding;
+        y2 = Math.max(this.star1.y, this.star2.y) + padding;
+        return x >= x1 && x <= x2 && y >= y1 && y <= y2;
+      };
+
+      Link.prototype.closeToPoint = function(x, y, minDist) {
+        var a, abDist, abcAngle, abxAngle, acDist, acxAngle, b, c, cdDist, xAbDist, xAcDist, yAbDist, yAcDist;
+        if (!this.inBoundaryBox(x, y, minDist)) {
+          return false;
+        }
+        a = this.star1;
+        b = this.star2;
+        c = {
+          "x": x,
+          "y": y
+        };
+        xAbDist = b.x - a.x;
+        yAbDist = b.y - a.y;
+        abDist = Math.sqrt((xAbDist * xAbDist) + (yAbDist * yAbDist));
+        abxAngle = Math.atan(yAbDist / xAbDist);
+        xAcDist = c.x - a.x;
+        yAcDist = c.y - a.y;
+        acDist = Math.sqrt((xAcDist * xAcDist) + (yAcDist * yAcDist));
+        acxAngle = Math.atan(yAcDist / xAcDist);
+        abcAngle = abxAngle - acxAngle;
+        cdDist = Math.abs(Math.sin(abcAngle) * acDist);
+        return cdDist <= minDist;
+      };
+
+      Link.prototype.intersectLink = function(link) {
+        var s, s1_x, s1_y, s2_x, s2_y, t, x1, x2, x3, x4, y1, y2, y3, y4;
+        x1 = this.star1.x;
+        y1 = this.star1.y;
+        x2 = this.star2.x;
+        y2 = this.star2.y;
+        x3 = link.star1.x;
+        y3 = link.star1.y;
+        x4 = link.star2.x;
+        y4 = link.star2.y;
+        s1_x = x2 - x1;
+        s1_y = y2 - y1;
+        s2_x = x4 - x3;
+        s2_y = y4 - y3;
+        s = (-s1_y * (x1 - x3) + s1_x * (y1 - y3)) / (-s2_x * s1_y + s1_x * s2_y);
+        t = (s2_x * (y1 - y3) - s2_y * (x1 - x3)) / (-s2_x * s1_y + s1_x * s2_y);
+        return s > 0 && s < 1 && t > 0 && t < 1;
+      };
+
+      return Link;
+
+    })(Element);
+    return Star;
+  });
+
+  (function(definition) {
+    Parallelio.Weapon = definition();
+    return Parallelio.Weapon.definition = definition;
+  })(function(dependencies) {
+    var Damageable, Projectile, Tiled, Timing, Weapon;
+    if (dependencies == null) {
+      dependencies = {};
+    }
+    Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : Parallelio.Tiled;
+    Timing = dependencies.hasOwnProperty("Timing") ? dependencies.Timing : Parallelio.Timing;
+    Damageable = dependencies.hasOwnProperty("Damageable") ? dependencies.Damageable : Parallelio.Damageable;
+    Projectile = dependencies.hasOwnProperty("Projectile") ? dependencies.Projectile : Parallelio.Projectile;
+    Weapon = (function(superClass) {
+      extend(Weapon, superClass);
+
+      Weapon.extend(Damageable);
+
+      function Weapon(options) {
+        this.setProperties(options);
+        Weapon.__super__.constructor.call(this);
+      }
+
+      Weapon.properties({
+        rechargeTime: {
+          "default": 1000
+        },
+        power: {
+          "default": 10
+        },
+        blastRange: {
+          "default": 1
+        },
+        propagationType: {
+          "default": null
+        },
+        projectileSpeed: {
+          "default": 10
+        },
+        target: {
+          "default": null,
+          change: function() {
+            if (this.autoFire) {
+              return this.fire();
+            }
+          }
+        },
+        charged: {
+          "default": true
+        },
+        charging: {
+          "default": true
+        },
+        enabled: {
+          "default": true
+        },
+        autoFire: {
+          "default": true
+        },
+        criticalHealth: {
+          "default": 0.3
+        },
+        canFire: {
+          get: function() {
+            return this.target && this.enabled && this.charged && this.health / this.maxHealth >= this.criticalHealth;
+          }
+        },
+        timing: {
+          calcul: function() {
+            return new Timing();
+          }
+        }
+      });
+
+      Weapon.prototype.fire = function() {
+        var projectile;
+        if (this.canFire) {
+          projectile = new Projectile({
+            origin: this,
+            target: this.target,
+            power: this.power,
+            blastRange: this.blastRange,
+            propagationType: this.propagationType,
+            speed: this.projectileSpeed,
+            timing: this.timing
+          });
+          projectile.launch();
+          this.charged = false;
+          this.recharge();
+          return projectile;
+        }
+      };
+
+      Weapon.prototype.recharge = function() {
+        this.charging = true;
+        return this.chargeTimeout = this.timing.setTimeout((function(_this) {
+          return function() {
+            _this.charging = false;
+            return _this.recharged();
+          };
+        })(this), this.rechargeTime);
+      };
+
+      Weapon.prototype.recharged = function() {
+        this.charged = true;
+        if (this.autoFire) {
+          return this.fire();
+        }
+      };
+
+      return Weapon;
+
+    })(Tiled);
+    return Weapon;
   });
 
   (function(definition) {
@@ -3770,1079 +4981,6 @@
 
     })(Tiled);
     return Wire;
-  });
-
-  (function(definition) {
-    Parallelio.TileContainer = definition();
-    return Parallelio.TileContainer.definition = definition;
-  })(function(dependencies) {
-    var Element, TileContainer;
-    if (dependencies == null) {
-      dependencies = {};
-    }
-    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
-    TileContainer = (function(superClass) {
-      extend(TileContainer, superClass);
-
-      function TileContainer() {
-        this.init();
-      }
-
-      TileContainer.properties({
-        boundaries: {
-          calcul: function() {
-            var boundaries;
-            boundaries = {
-              top: null,
-              left: null,
-              bottom: null,
-              right: null
-            };
-            this.tiles.forEach((function(_this) {
-              return function(tile) {
-                return _this._addToBondaries(tile, boundaries);
-              };
-            })(this));
-            return boundaries;
-          },
-          output: function(val) {
-            return Object.assign({}, val);
-          }
-        }
-      });
-
-      TileContainer.prototype._addToBondaries = function(tile, boundaries) {
-        if ((boundaries.top == null) || tile.y < boundaries.top) {
-          boundaries.top = tile.y;
-        }
-        if ((boundaries.left == null) || tile.x < boundaries.left) {
-          boundaries.left = tile.x;
-        }
-        if ((boundaries.bottom == null) || tile.y > boundaries.bottom) {
-          boundaries.bottom = tile.y;
-        }
-        if ((boundaries.right == null) || tile.x > boundaries.right) {
-          return boundaries.right = tile.x;
-        }
-      };
-
-      TileContainer.prototype.init = function() {
-        this.coords = {};
-        return this.tiles = [];
-      };
-
-      TileContainer.prototype.addTile = function(tile) {
-        var ref1;
-        if (!this.tiles.includes(tile)) {
-          this.tiles.push(tile);
-          if (this.coords[tile.x] == null) {
-            this.coords[tile.x] = {};
-          }
-          this.coords[tile.x][tile.y] = tile;
-          tile.container = this;
-          if ((ref1 = this._boundaries) != null ? ref1.calculated : void 0) {
-            this._addToBondaries(tile, this._boundaries.value);
-          }
-        }
-        return this;
-      };
-
-      TileContainer.prototype.removeTile = function(tile) {
-        var index, ref1;
-        index = this.tiles.indexOf(tile);
-        if (index > -1) {
-          this.tiles.splice(index, 1);
-          delete this.coords[tile.x][tile.y];
-          tile.container = null;
-          if ((ref1 = this._boundaries) != null ? ref1.calculated : void 0) {
-            if (this.boundaries.top === tile.y || this.boundaries.bottom === tile.y || this.boundaries.left === tile.x || this.boundaries.right === tile.x) {
-              return this.invalidateBoundaries();
-            }
-          }
-        }
-      };
-
-      TileContainer.prototype.removeTileAt = function(x, y) {
-        var tile;
-        if (tile = this.getTile(x, y)) {
-          return this.removeTile(tile);
-        }
-      };
-
-      TileContainer.prototype.getTile = function(x, y) {
-        var ref1;
-        if (((ref1 = this.coords[x]) != null ? ref1[y] : void 0) != null) {
-          return this.coords[x][y];
-        }
-      };
-
-      TileContainer.prototype.loadMatrix = function(matrix) {
-        var options, row, tile, x, y;
-        for (y in matrix) {
-          row = matrix[y];
-          for (x in row) {
-            tile = row[x];
-            options = {
-              x: parseInt(x),
-              y: parseInt(y)
-            };
-            if (typeof tile === "function") {
-              this.addTile(tile(options));
-            } else {
-              tile.x = options.x;
-              tile.y = options.y;
-              this.addTile(tile);
-            }
-          }
-        }
-        return this;
-      };
-
-      TileContainer.prototype.inRange = function(tile, range) {
-        var found, k, l, ref1, ref2, ref3, ref4, tiles, x, y;
-        tiles = [];
-        range--;
-        for (x = k = ref1 = tile.x - range, ref2 = tile.x + range; ref1 <= ref2 ? k <= ref2 : k >= ref2; x = ref1 <= ref2 ? ++k : --k) {
-          for (y = l = ref3 = tile.y - range, ref4 = tile.y + range; ref3 <= ref4 ? l <= ref4 : l >= ref4; y = ref3 <= ref4 ? ++l : --l) {
-            if (Math.sqrt((x - tile.x) * (x - tile.x) + (y - tile.y) * (y - tile.y)) <= range && ((found = this.getTile(x, y)) != null)) {
-              tiles.push(found);
-            }
-          }
-        }
-        return tiles;
-      };
-
-      TileContainer.prototype.allTiles = function() {
-        return this.tiles.slice();
-      };
-
-      TileContainer.prototype.clearAll = function() {
-        var k, len, ref1, tile;
-        ref1 = this.tiles;
-        for (k = 0, len = ref1.length; k < len; k++) {
-          tile = ref1[k];
-          tile.container = null;
-        }
-        this.coords = {};
-        this.tiles = [];
-        return this;
-      };
-
-      return TileContainer;
-
-    })(Element);
-    return TileContainer;
-  });
-
-  (function(definition) {
-    Parallelio.Projectile = definition();
-    return Parallelio.Projectile.definition = definition;
-  })(function(dependencies) {
-    var Element, Projectile, Timing;
-    if (dependencies == null) {
-      dependencies = {};
-    }
-    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
-    Timing = dependencies.hasOwnProperty("Timing") ? dependencies.Timing : Parallelio.Timing;
-    Projectile = (function(superClass) {
-      extend(Projectile, superClass);
-
-      function Projectile(options) {
-        this.setProperties(options);
-        this.init();
-      }
-
-      Projectile.prototype.init = function() {};
-
-      Projectile.properties({
-        origin: {
-          "default": null
-        },
-        target: {
-          "default": null
-        },
-        power: {
-          "default": 10
-        },
-        blastRange: {
-          "default": 1
-        },
-        propagationType: {
-          "default": null
-        },
-        speed: {
-          "default": 10
-        },
-        pathLength: {
-          calcul: function() {
-            var dist;
-            if ((this.originTile != null) && (this.targetTile != null)) {
-              dist = this.originTile.dist(this.targetTile);
-              if (dist) {
-                return dist.length;
-              }
-            }
-            return 100;
-          }
-        },
-        originTile: {
-          calcul: function(invalidator) {
-            var origin;
-            origin = invalidator.prop('origin');
-            if (origin != null) {
-              return origin.tile || origin;
-            }
-          }
-        },
-        targetTile: {
-          calcul: function(invalidator) {
-            var target;
-            target = invalidator.prop('target');
-            if (target != null) {
-              return target.tile || target;
-            }
-          }
-        },
-        container: {
-          calcul: function(invalidate) {
-            var originTile, targetTile;
-            originTile = invalidate.prop('originTile');
-            targetTile = invalidate.prop('targetTile');
-            if (originTile.container === targetTile.container) {
-              return originTile.container;
-            } else if (invalidate.prop('prcPath') > 0.5) {
-              return targetTile.container;
-            } else {
-              return originTile.container;
-            }
-          }
-        },
-        x: {
-          calcul: function(invalidate) {
-            var startPos;
-            startPos = invalidate.prop('startPos');
-            return (invalidate.prop('targetPos').x - startPos.x) * invalidate.prop('prcPath') + startPos.x;
-          }
-        },
-        y: {
-          calcul: function(invalidate) {
-            var startPos;
-            startPos = invalidate.prop('startPos');
-            return (invalidate.prop('targetPos').y - startPos.y) * invalidate.prop('prcPath') + startPos.y;
-          }
-        },
-        startPos: {
-          calcul: function(invalidate) {
-            var container, dist, offset, originTile;
-            originTile = invalidate.prop('originTile');
-            container = invalidate.prop('container');
-            offset = this.startOffset;
-            if (originTile.container !== container) {
-              dist = container.dist(originTile.container);
-              offset.x += dist.x;
-              offset.y += dist.y;
-            }
-            return {
-              x: originTile.x + offset.x,
-              y: originTile.y + offset.y
-            };
-          },
-          output: function(val) {
-            return Object.assign({}, val);
-          }
-        },
-        targetPos: {
-          calcul: function(invalidate) {
-            var container, dist, offset, targetTile;
-            targetTile = invalidate.prop('targetTile');
-            container = invalidate.prop('container');
-            offset = this.targetOffset;
-            if (targetTile.container !== container) {
-              dist = container.dist(targetTile.container);
-              offset.x += dist.x;
-              offset.y += dist.y;
-            }
-            return {
-              x: targetTile.x + offset.x,
-              y: targetTile.y + offset.y
-            };
-          },
-          output: function(val) {
-            return Object.assign({}, val);
-          }
-        },
-        startOffset: {
-          "default": {
-            x: 0.5,
-            y: 0.5
-          },
-          output: function(val) {
-            return Object.assign({}, val);
-          }
-        },
-        targetOffset: {
-          "default": {
-            x: 0.5,
-            y: 0.5
-          },
-          output: function(val) {
-            return Object.assign({}, val);
-          }
-        },
-        prcPath: {
-          calcul: function() {
-            var ref1;
-            return ((ref1 = this.pathTimeout) != null ? ref1.getPrc() : void 0) || 0;
-          }
-        },
-        timing: {
-          calcul: function() {
-            return new Timing();
-          }
-        },
-        moving: {
-          "default": false
-        }
-      });
-
-      Projectile.prototype.launch = function() {
-        this.moving = true;
-        return this.pathTimeout = this.timing.setTimeout((function(_this) {
-          return function() {
-            _this.deliverPayload();
-            return _this.moving = false;
-          };
-        })(this), this.pathLength / this.speed * 1000);
-      };
-
-      Projectile.prototype.deliverPayload = function() {
-        var payload;
-        payload = new this.propagationType({
-          tile: this.target.tile || this.target,
-          power: this.power,
-          range: this.blastRange
-        });
-        payload.apply();
-        this.payloadDelivered();
-        return payload;
-      };
-
-      Projectile.prototype.payloadDelivered = function() {
-        return this.destroy();
-      };
-
-      Projectile.prototype.destroy = function() {
-        return this.destroyProperties();
-      };
-
-      return Projectile;
-
-    })(Element);
-    return Projectile;
-  });
-
-  (function(definition) {
-    Parallelio.RoomGenerator = definition();
-    return Parallelio.RoomGenerator.definition = definition;
-  })(function(dependencies) {
-    var Door, Element, RoomGenerator, Tile, TileContainer;
-    if (dependencies == null) {
-      dependencies = {};
-    }
-    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
-    TileContainer = dependencies.hasOwnProperty("TileContainer") ? dependencies.TileContainer : Parallelio.TileContainer;
-    Tile = dependencies.hasOwnProperty("Tile") ? dependencies.Tile : Parallelio.Tile;
-    Door = dependencies.hasOwnProperty("Door") ? dependencies.Door : Parallelio.Door;
-    RoomGenerator = (function(superClass) {
-      extend(RoomGenerator, superClass);
-
-      function RoomGenerator(options) {
-        this.setProperties(options);
-        this.directions = [
-          {
-            x: 1,
-            y: 0
-          }, {
-            x: -1,
-            y: 0
-          }, {
-            x: 0,
-            y: 1
-          }, {
-            x: 0,
-            y: -1
-          }
-        ];
-        this.corners = [
-          {
-            x: 1,
-            y: 1
-          }, {
-            x: -1,
-            y: -1
-          }, {
-            x: -1,
-            y: 1
-          }, {
-            x: 1,
-            y: -1
-          }
-        ];
-        this.allDirections = this.directions.concat(this.corners);
-      }
-
-      RoomGenerator.properties({
-        rng: {
-          "default": Math.random
-        },
-        maxVolume: {
-          "default": 25
-        },
-        minVolume: {
-          "default": 50
-        },
-        width: {
-          "default": 30
-        },
-        height: {
-          "default": 15
-        },
-        tiles: {
-          calcul: function() {
-            var k, l, ref1, ref2, tiles, x, y;
-            tiles = new TileContainer();
-            for (x = k = 0, ref1 = this.width; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
-              for (y = l = 0, ref2 = this.height; 0 <= ref2 ? l <= ref2 : l >= ref2; y = 0 <= ref2 ? ++l : --l) {
-                tiles.addTile(new Tile(x, y));
-              }
-            }
-            return tiles;
-          }
-        },
-        floorFactory: {
-          "default": function(opt) {
-            return new Tile(opt.x, opt.y);
-          }
-        },
-        wallFactory: {
-          "default": null
-        },
-        doorFactory: {
-          calcul: function() {
-            return this.floorFactory;
-          }
-        }
-      });
-
-      RoomGenerator.prototype.init = function() {
-        this.finalTiles = null;
-        this.rooms = [];
-        return this.free = this.tiles.allTiles().filter((function(_this) {
-          return function(tile) {
-            var direction, k, len, next, ref1;
-            ref1 = _this.allDirections;
-            for (k = 0, len = ref1.length; k < len; k++) {
-              direction = ref1[k];
-              next = _this.tiles.getTile(tile.x + direction.x, tile.y + direction.y);
-              if (next == null) {
-                return false;
-              }
-            }
-            return true;
-          };
-        })(this));
-      };
-
-      RoomGenerator.prototype.calcul = function() {
-        var i;
-        this.init();
-        i = 0;
-        while (this.step() || this.newRoom()) {
-          i++;
-        }
-        this.createDoors();
-        this.rooms;
-        return this.makeFinalTiles();
-      };
-
-      RoomGenerator.prototype.makeFinalTiles = function() {
-        return this.finalTiles = this.tiles.allTiles().map((function(_this) {
-          return function(tile) {
-            var opt;
-            if (tile.factory != null) {
-              opt = {
-                x: tile.x,
-                y: tile.y
-              };
-              if (tile.factoryOptions != null) {
-                opt = Object.assign(opt, tile.factoryOptions);
-              }
-              return tile.factory(opt);
-            }
-          };
-        })(this)).filter((function(_this) {
-          return function(tile) {
-            return tile != null;
-          };
-        })(this));
-      };
-
-      RoomGenerator.prototype.getTiles = function() {
-        if (this.finalTiles == null) {
-          this.calcul();
-        }
-        return this.finalTiles;
-      };
-
-      RoomGenerator.prototype.newRoom = function() {
-        if (this.free.length) {
-          this.volume = Math.floor(this.rng() * (this.maxVolume - this.minVolume)) + this.minVolume;
-          return this.room = new RoomGenerator.Room();
-        }
-      };
-
-      RoomGenerator.prototype.randomDirections = function() {
-        var i, j, o, x;
-        o = this.directions.slice();
-        j = void 0;
-        x = void 0;
-        i = o.length;
-        while (i) {
-          j = Math.floor(this.rng() * i);
-          x = o[--i];
-          o[i] = o[j];
-          o[j] = x;
-        }
-        return o;
-      };
-
-      RoomGenerator.prototype.step = function() {
-        var success, tries;
-        if (this.room) {
-          if (this.free.length && this.room.tiles.length < this.volume - 1) {
-            if (this.room.tiles.length) {
-              tries = this.randomDirections();
-              success = false;
-              while (tries.length && !success) {
-                success = this.expand(this.room, tries.pop(), this.volume);
-              }
-              if (!success) {
-                this.roomDone();
-              }
-              return success;
-            } else {
-              this.allocateTile(this.randomFreeTile(), this.room);
-              return true;
-            }
-          } else {
-            this.roomDone();
-            return false;
-          }
-        }
-      };
-
-      RoomGenerator.prototype.roomDone = function() {
-        this.rooms.push(this.room);
-        this.allocateWalls(this.room);
-        return this.room = null;
-      };
-
-      RoomGenerator.prototype.expand = function(room, direction, max) {
-        var k, len, next, ref1, second, success, tile;
-        if (max == null) {
-          max = 0;
-        }
-        success = false;
-        ref1 = room.tiles;
-        for (k = 0, len = ref1.length; k < len; k++) {
-          tile = ref1[k];
-          if (max === 0 || room.tiles.length < max) {
-            if (next = this.tileOffsetIsFree(tile, direction)) {
-              this.allocateTile(next, room);
-              success = true;
-            }
-            if ((second = this.tileOffsetIsFree(tile, direction, 2)) && !this.tileOffsetIsFree(tile, direction, 3)) {
-              this.allocateTile(second, room);
-            }
-          }
-        }
-        return success;
-      };
-
-      RoomGenerator.prototype.allocateWalls = function(room) {
-        var direction, k, len, next, nextRoom, otherSide, ref1, results, tile;
-        ref1 = room.tiles;
-        results = [];
-        for (k = 0, len = ref1.length; k < len; k++) {
-          tile = ref1[k];
-          results.push((function() {
-            var l, len1, ref2, results1;
-            ref2 = this.allDirections;
-            results1 = [];
-            for (l = 0, len1 = ref2.length; l < len1; l++) {
-              direction = ref2[l];
-              next = this.tiles.getTile(tile.x + direction.x, tile.y + direction.y);
-              if ((next != null) && next.room !== room) {
-                if (indexOf.call(this.corners, direction) < 0) {
-                  otherSide = this.tiles.getTile(tile.x + direction.x * 2, tile.y + direction.y * 2);
-                  nextRoom = (otherSide != null ? otherSide.room : void 0) != null ? otherSide.room : null;
-                  room.addWall(next, nextRoom);
-                  if (nextRoom != null) {
-                    nextRoom.addWall(next, room);
-                  }
-                }
-                next.factory = this.wallFactory;
-                results1.push(this.allocateTile(next));
-              } else {
-                results1.push(void 0);
-              }
-            }
-            return results1;
-          }).call(this));
-        }
-        return results;
-      };
-
-      RoomGenerator.prototype.createDoors = function() {
-        var door, k, len, ref1, results, room, walls;
-        ref1 = this.rooms;
-        results = [];
-        for (k = 0, len = ref1.length; k < len; k++) {
-          room = ref1[k];
-          results.push((function() {
-            var l, len1, ref2, results1;
-            ref2 = room.wallsByRooms();
-            results1 = [];
-            for (l = 0, len1 = ref2.length; l < len1; l++) {
-              walls = ref2[l];
-              if ((walls.room != null) && room.doorsForRoom(walls.room) < 1) {
-                door = walls.tiles[Math.floor(this.rng() * walls.tiles.length)];
-                door.factory = this.doorFactory;
-                door.factoryOptions = {
-                  direction: this.tiles.getTile(door.x + 1, door.y).factory === this.floorFactory ? Door.directions.vertical : Door.directions.horizontal
-                };
-                room.addDoor(door, walls.room);
-                results1.push(walls.room.addDoor(door, room));
-              } else {
-                results1.push(void 0);
-              }
-            }
-            return results1;
-          }).call(this));
-        }
-        return results;
-      };
-
-      RoomGenerator.prototype.allocateTile = function(tile, room) {
-        var index;
-        if (room == null) {
-          room = null;
-        }
-        if (room != null) {
-          room.addTile(tile);
-          tile.factory = this.floorFactory;
-        }
-        index = this.free.indexOf(tile);
-        if (index > -1) {
-          return this.free.splice(index, 1);
-        }
-      };
-
-      RoomGenerator.prototype.tileOffsetIsFree = function(tile, direction, multiply) {
-        if (multiply == null) {
-          multiply = 1;
-        }
-        return this.tileIsFree(tile.x + direction.x * multiply, tile.y + direction.y * multiply);
-      };
-
-      RoomGenerator.prototype.tileIsFree = function(x, y) {
-        var tile;
-        tile = this.tiles.getTile(x, y);
-        if ((tile != null) && indexOf.call(this.free, tile) >= 0) {
-          return tile;
-        } else {
-          return false;
-        }
-      };
-
-      RoomGenerator.prototype.randomFreeTile = function() {
-        return this.free[Math.floor(this.rng() * this.free.length)];
-      };
-
-      return RoomGenerator;
-
-    })(Element);
-    RoomGenerator.Room = (function() {
-      function Room() {
-        this.tiles = [];
-        this.walls = [];
-        this.doors = [];
-      }
-
-      Room.prototype.addTile = function(tile) {
-        this.tiles.push(tile);
-        return tile.room = this;
-      };
-
-      Room.prototype.containsWall = function(tile) {
-        var k, len, ref1, wall;
-        ref1 = this.walls;
-        for (k = 0, len = ref1.length; k < len; k++) {
-          wall = ref1[k];
-          if (wall.tile === tile) {
-            return wall;
-          }
-        }
-        return false;
-      };
-
-      Room.prototype.addWall = function(tile, nextRoom) {
-        var existing;
-        existing = this.containsWall(tile);
-        if (existing) {
-          return existing.nextRoom = nextRoom;
-        } else {
-          return this.walls.push({
-            tile: tile,
-            nextRoom: nextRoom
-          });
-        }
-      };
-
-      Room.prototype.wallsByRooms = function() {
-        var k, len, pos, ref1, res, rooms, wall;
-        rooms = [];
-        res = [];
-        ref1 = this.walls;
-        for (k = 0, len = ref1.length; k < len; k++) {
-          wall = ref1[k];
-          pos = rooms.indexOf(wall.nextRoom);
-          if (pos === -1) {
-            pos = rooms.length;
-            rooms.push(wall.nextRoom);
-            res.push({
-              room: wall.nextRoom,
-              tiles: []
-            });
-          }
-          res[pos].tiles.push(wall.tile);
-        }
-        return res;
-      };
-
-      Room.prototype.addDoor = function(tile, nextRoom) {
-        return this.doors.push({
-          tile: tile,
-          nextRoom: nextRoom
-        });
-      };
-
-      Room.prototype.doorsForRoom = function(room) {
-        var door, k, len, ref1, res;
-        res = [];
-        ref1 = this.doors;
-        for (k = 0, len = ref1.length; k < len; k++) {
-          door = ref1[k];
-          if (door.nextRoom === room) {
-            res.push(door.tile);
-          }
-        }
-        return res;
-      };
-
-      return Room;
-
-    })();
-    return RoomGenerator;
-  });
-
-  (function(definition) {
-    Parallelio.Star = definition();
-    return Parallelio.Star.definition = definition;
-  })(function(dependencies) {
-    var Element, Star;
-    if (dependencies == null) {
-      dependencies = {};
-    }
-    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
-    Star = (function(superClass) {
-      extend(Star, superClass);
-
-      function Star(x5, y5) {
-        this.x = x5;
-        this.y = y5;
-        this.init();
-      }
-
-      Star.properties({
-        x: {},
-        y: {},
-        links: {
-          collection: {
-            findStar: function(star) {
-              return this.find(function(link) {
-                return link.star2 === star || link.star1 === star;
-              });
-            }
-          }
-        }
-      });
-
-      Star.prototype.init = function() {};
-
-      Star.prototype.linkTo = function(star) {
-        if (!this.links.findStar(star)) {
-          return this.addLink(new this.constructor.Link(this, star));
-        }
-      };
-
-      Star.prototype.addLink = function(link) {
-        this.links.add(link);
-        link.otherStar(this).links.add(link);
-        return link;
-      };
-
-      Star.prototype.dist = function(x, y) {
-        var xDist, yDist;
-        xDist = this.x - x;
-        yDist = this.y - y;
-        return Math.sqrt((xDist * xDist) + (yDist * yDist));
-      };
-
-      Star.collenctionFn = {
-        closest: function(x, y) {
-          var min, minDist;
-          min = null;
-          minDist = null;
-          this.forEach(function(star) {
-            var dist;
-            dist = star.dist(x, y);
-            if ((min == null) || minDist > dist) {
-              min = star;
-              return minDist = dist;
-            }
-          });
-          return min;
-        },
-        closests: function(x, y) {
-          var dists;
-          dists = this.map(function(star) {
-            return {
-              dist: star.dist(x, y),
-              star: star
-            };
-          });
-          dists.sort(function(a, b) {
-            return a.dist - b.dist;
-          });
-          return this.copy(dists.map(function(dist) {
-            return dist.star;
-          }));
-        }
-      };
-
-      return Star;
-
-    })(Element);
-    Star.Link = (function(superClass) {
-      extend(Link, superClass);
-
-      function Link(star1, star2) {
-        this.star1 = star1;
-        this.star2 = star2;
-      }
-
-      Link.prototype.remove = function() {
-        this.star1.links.remove(this);
-        return this.star2.links.remove(this);
-      };
-
-      Link.prototype.otherStar = function(star) {
-        if (star === this.star1) {
-          return this.star2;
-        } else {
-          return this.star1;
-        }
-      };
-
-      Link.prototype.getLength = function() {
-        return this.star1.dist(this.star2.x, this.star2.y);
-      };
-
-      Link.prototype.inBoundaryBox = function(x, y, padding) {
-        var x1, x2, y1, y2;
-        if (padding == null) {
-          padding = 0;
-        }
-        x1 = Math.min(this.star1.x, this.star2.x) - padding;
-        y1 = Math.min(this.star1.y, this.star2.y) - padding;
-        x2 = Math.max(this.star1.x, this.star2.x) + padding;
-        y2 = Math.max(this.star1.y, this.star2.y) + padding;
-        return x >= x1 && x <= x2 && y >= y1 && y <= y2;
-      };
-
-      Link.prototype.closeToPoint = function(x, y, minDist) {
-        var a, abDist, abcAngle, abxAngle, acDist, acxAngle, b, c, cdDist, xAbDist, xAcDist, yAbDist, yAcDist;
-        if (!this.inBoundaryBox(x, y, minDist)) {
-          return false;
-        }
-        a = this.star1;
-        b = this.star2;
-        c = {
-          "x": x,
-          "y": y
-        };
-        xAbDist = b.x - a.x;
-        yAbDist = b.y - a.y;
-        abDist = Math.sqrt((xAbDist * xAbDist) + (yAbDist * yAbDist));
-        abxAngle = Math.atan(yAbDist / xAbDist);
-        xAcDist = c.x - a.x;
-        yAcDist = c.y - a.y;
-        acDist = Math.sqrt((xAcDist * xAcDist) + (yAcDist * yAcDist));
-        acxAngle = Math.atan(yAcDist / xAcDist);
-        abcAngle = abxAngle - acxAngle;
-        cdDist = Math.abs(Math.sin(abcAngle) * acDist);
-        return cdDist <= minDist;
-      };
-
-      Link.prototype.intersectLink = function(link) {
-        var s, s1_x, s1_y, s2_x, s2_y, t, x1, x2, x3, x4, y1, y2, y3, y4;
-        x1 = this.star1.x;
-        y1 = this.star1.y;
-        x2 = this.star2.x;
-        y2 = this.star2.y;
-        x3 = link.star1.x;
-        y3 = link.star1.y;
-        x4 = link.star2.x;
-        y4 = link.star2.y;
-        s1_x = x2 - x1;
-        s1_y = y2 - y1;
-        s2_x = x4 - x3;
-        s2_y = y4 - y3;
-        s = (-s1_y * (x1 - x3) + s1_x * (y1 - y3)) / (-s2_x * s1_y + s1_x * s2_y);
-        t = (s2_x * (y1 - y3) - s2_y * (x1 - x3)) / (-s2_x * s1_y + s1_x * s2_y);
-        return s > 0 && s < 1 && t > 0 && t < 1;
-      };
-
-      return Link;
-
-    })(Element);
-    return Star;
-  });
-
-  (function(definition) {
-    Parallelio.Weapon = definition();
-    return Parallelio.Weapon.definition = definition;
-  })(function(dependencies) {
-    var Damageable, Projectile, Tiled, Timing, Weapon;
-    if (dependencies == null) {
-      dependencies = {};
-    }
-    Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : Parallelio.Tiled;
-    Timing = dependencies.hasOwnProperty("Timing") ? dependencies.Timing : Parallelio.Timing;
-    Damageable = dependencies.hasOwnProperty("Damageable") ? dependencies.Damageable : Parallelio.Damageable;
-    Projectile = dependencies.hasOwnProperty("Projectile") ? dependencies.Projectile : Parallelio.Projectile;
-    Weapon = (function(superClass) {
-      extend(Weapon, superClass);
-
-      Weapon.extend(Damageable);
-
-      function Weapon(options) {
-        this.setProperties(options);
-        Weapon.__super__.constructor.call(this);
-      }
-
-      Weapon.properties({
-        rechargeTime: {
-          "default": 1000
-        },
-        power: {
-          "default": 10
-        },
-        blastRange: {
-          "default": 1
-        },
-        propagationType: {
-          "default": null
-        },
-        projectileSpeed: {
-          "default": 10
-        },
-        target: {
-          "default": null,
-          change: function() {
-            if (this.autoFire) {
-              return this.fire();
-            }
-          }
-        },
-        charged: {
-          "default": true
-        },
-        charging: {
-          "default": true
-        },
-        enabled: {
-          "default": true
-        },
-        autoFire: {
-          "default": true
-        },
-        criticalHealth: {
-          "default": 0.3
-        },
-        canFire: {
-          get: function() {
-            return this.target && this.enabled && this.charged && this.health / this.maxHealth >= this.criticalHealth;
-          }
-        },
-        timing: {
-          calcul: function() {
-            return new Timing();
-          }
-        }
-      });
-
-      Weapon.prototype.fire = function() {
-        var projectile;
-        if (this.canFire) {
-          projectile = new Projectile({
-            origin: this,
-            target: this.target,
-            power: this.power,
-            blastRange: this.blastRange,
-            propagationType: this.propagationType,
-            speed: this.projectileSpeed,
-            timing: this.timing
-          });
-          projectile.launch();
-          this.charged = false;
-          this.recharge();
-          return projectile;
-        }
-      };
-
-      Weapon.prototype.recharge = function() {
-        this.charging = true;
-        return this.chargeTimeout = this.timing.setTimeout((function(_this) {
-          return function() {
-            _this.charging = false;
-            return _this.recharged();
-          };
-        })(this), this.rechargeTime);
-      };
-
-      Weapon.prototype.recharged = function() {
-        this.charged = true;
-        if (this.autoFire) {
-          return this.fire();
-        }
-      };
-
-      return Weapon;
-
-    })(Tiled);
-    return Weapon;
   });
 
 }).call(this);
