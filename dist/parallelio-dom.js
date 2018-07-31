@@ -85,14 +85,15 @@
         },
         cls: {
           updater: Updater.instance,
+          active: function(invalidator) {
+            return invalidator.propInitiated('display');
+          },
           change: function(old) {
-            if (this.getPropertyInstance('display').calculated) {
-              if (old != null) {
-                this.display.removeClass(old);
-              }
-              if (this.cls != null) {
-                return this.display.addClass(this.cls);
-              }
+            if (old != null) {
+              this.display.removeClass(old);
+            }
+            if (this.cls != null) {
+              return this.display.addClass(this.cls);
             }
           }
         },
@@ -100,39 +101,39 @@
           calcul: function() {
             var display, newDiv;
             newDiv = document.createElement("div");
-            display = jQuery(newDiv).addClass(this.baseCls).addClass(this.cls).css({
-              top: this.displayY,
-              left: this.displayX
-            });
+            display = jQuery(newDiv).addClass(this.baseCls);
             display.get(0)._parallelio_obj = this;
             return display;
           }
         },
         displayX: {
           updater: Updater.instance,
-          "default": 0,
+          active: function(invalidator) {
+            return invalidator.propInitiated('display');
+          },
           change: function(old) {
-            if (this.getPropertyInstance('display').calculated) {
-              return this.display.css({
-                left: this.displayX
-              });
-            }
+            return this.display.css({
+              left: this.displayX
+            });
           }
         },
         displayY: {
           updater: Updater.instance,
-          "default": 0,
+          active: function(invalidator) {
+            return invalidator.propInitiated('display');
+          },
           change: function(old) {
-            if (this.getPropertyInstance('display').calculated) {
-              return this.display.css({
-                top: this.displayY
-              });
-            }
+            return this.display.css({
+              top: this.displayY
+            });
           }
         }
       });
 
       Display.prototype.initDisplay = function() {
+        this.cls;
+        this.displayX;
+        this.displayY;
         return this.displayContainer;
       };
 

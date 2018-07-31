@@ -12,35 +12,37 @@ class Display extends Element
           @display.appendTo(@displayContainer)
     cls:
       updater: Updater.instance
+      active: (invalidator)->
+        invalidator.propInitiated('display')
       change: (old)->
-        if @getPropertyInstance('display').calculated
-          if old?
-            @display.removeClass(old)
-          if @cls?
-            @display.addClass(@cls)
+        if old?
+          @display.removeClass(old)
+        if @cls?
+          @display.addClass(@cls)
     display:
       calcul: ->
         newDiv = document.createElement("div");
         display = jQuery(newDiv)
           .addClass(@baseCls)
-          .addClass(@cls)
-          .css(top: @displayY, left: @displayX)
         display.get(0)._parallelio_obj = this
         display
     displayX:
       updater: Updater.instance
-      default: 0
+      active: (invalidator)->
+        invalidator.propInitiated('display')
       change: (old)->
-        if @getPropertyInstance('display').calculated
-          @display.css(left: @displayX)
+        @display.css(left: @displayX)
     displayY:
       updater: Updater.instance
-      default: 0
+      active: (invalidator)->
+        invalidator.propInitiated('display')
       change: (old)->
-        if @getPropertyInstance('display').calculated
-          @display.css(top: @displayY)
+        @display.css(top: @displayY)
 
   initDisplay: ->
+    @cls
+    @displayX
+    @displayY
     @displayContainer
 
   destroyDisplay: ->
