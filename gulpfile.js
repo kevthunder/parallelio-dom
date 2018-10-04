@@ -95,9 +95,10 @@ gulp.task('test', gulp.series('build','coffeeTest', function(done) {
   }, done).start();
 }));
 
-gulp.task('test-exit', gulp.series('test', function() {
+gulp.task('test-exit', gulp.series('test', function(done) {
   console.log('Everithing is done, closing process');
   process.exit();
+  done();
 }));
 
 gulp.task('test-debug', gulp.series('build','coffeeTest', function(done) {
