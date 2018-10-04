@@ -6,8 +6,8 @@ Updater = require('./Updater')
 
 class Weapon extends BaseWeapon
   constructor: (direction) ->
-    @baseCls = 'weapon'
     super(direction)
+    @baseCls = 'weapon'
 
   @properties
     direction:

@@ -2,6 +2,7 @@ Element = require('parallelio').Element
 
 class View extends Element
   constructor: (@display = null) ->
+    super()
     @hovered = false
     @keysInterval = {}
   @directionkeys = {

@@ -1,55 +1,44 @@
 (function() {
-  var DOM,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
+  var DOM;
 
   DOM = typeof module !== "undefined" && module !== null ? module.exports = {} : (this.Parallelio == null ? this.Parallelio = {} : void 0, this.Parallelio.DOM == null ? this.Parallelio.DOM = {} : void 0, this.Parallelio.DOM);
 
   (function(definition) {
     DOM.Updater = definition();
     return DOM.Updater.definition = definition;
-  })(function(dependencies) {
+  })(function(dependencies = {}) {
     var BaseUpdater, Updater;
-    if (dependencies == null) {
-      dependencies = {};
-    }
     BaseUpdater = dependencies.hasOwnProperty("BaseUpdater") ? dependencies.BaseUpdater : Parallelio.Spark.Updater;
-    Updater = (function(superClass) {
-      extend(Updater, superClass);
-
-      function Updater() {
-        Updater.__super__.constructor.call(this);
-        this.updateCallback = (function(_this) {
-          return function() {
-            return _this.update();
-          };
-        })(this);
+    Updater = class Updater extends BaseUpdater {
+      constructor() {
+        super();
+        this.updateCallback = () => {
+          return this.update();
+        };
         this.binded = false;
       }
 
-      Updater.prototype.update = function() {
-        Updater.__super__.update.call(this);
+      update() {
+        super.update();
         this.binded = false;
         if (this.callbacks.length > 0) {
           return this.requestFrame();
         }
-      };
+      }
 
-      Updater.prototype.requestFrame = function() {
+      requestFrame() {
         if (!this.binded) {
           window.requestAnimationFrame(this.updateCallback);
           return this.binded = true;
         }
-      };
+      }
 
-      Updater.prototype.addCallback = function(callback) {
-        Updater.__super__.addCallback.call(this, callback);
+      addCallback(callback) {
+        super.addCallback(callback);
         return this.requestFrame();
-      };
+      }
 
-      return Updater;
-
-    })(BaseUpdater);
+    };
     Updater.instance = new Updater();
     return Updater;
   });
@@ -57,26 +46,33 @@
   (function(definition) {
     DOM.Display = definition();
     return DOM.Display.definition = definition;
-  })(function(dependencies) {
+  })(function(dependencies = {}) {
     var Display, Element, Updater;
-    if (dependencies == null) {
-      dependencies = {};
-    }
     Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Element;
     Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
-    Display = (function(superClass) {
-      extend(Display, superClass);
+    Display = (function() {
+      class Display extends Element {
+        initDisplay() {
+          this.cls;
+          this.displayX;
+          this.displayY;
+          return this.displayContainer;
+        }
 
-      function Display() {
-        return Display.__super__.constructor.apply(this, arguments);
-      }
+        destroyDisplay() {
+          if (this._display != null) {
+            return this.display.remove();
+          }
+        }
+
+      };
 
       Display.include(EventEmitter.prototype);
 
       Display.properties({
         displayContainer: {
           updater: Updater.instance,
-          "default": null,
+          default: null,
           change: function() {
             if (this.displayContainer != null) {
               return this.display.appendTo(this.displayContainer);
@@ -130,46 +126,31 @@
         }
       });
 
-      Display.prototype.initDisplay = function() {
-        this.cls;
-        this.displayX;
-        this.displayY;
-        return this.displayContainer;
-      };
-
-      Display.prototype.destroyDisplay = function() {
-        if (this._display != null) {
-          return this.display.remove();
-        }
-      };
-
       return Display;
 
-    })(Element);
+    }).call(this);
     return Display;
   });
 
   (function(definition) {
     DOM.Tiled = definition();
     return DOM.Tiled.definition = definition;
-  })(function(dependencies) {
+  })(function(dependencies = {}) {
     var BaseTiled, Display, Tiled;
-    if (dependencies == null) {
-      dependencies = {};
-    }
     BaseTiled = dependencies.hasOwnProperty("BaseTiled") ? dependencies.BaseTiled : Parallelio.Tiled;
     Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
-    Tiled = (function(superClass) {
-      extend(Tiled, superClass);
+    Tiled = (function() {
+      class Tiled extends BaseTiled {
+        constructor() {
+          super();
+          this.initDisplay();
+        }
+
+      };
 
       Tiled.extend(Display);
 
       Tiled.include(EventEmitter.prototype);
-
-      function Tiled() {
-        Tiled.__super__.constructor.call(this);
-        this.initDisplay();
-      }
 
       Tiled.properties({
         displayContainer: {
@@ -203,64 +184,55 @@
 
       return Tiled;
 
-    })(BaseTiled);
+    }).call(this);
     return Tiled;
   });
 
   (function(definition) {
     DOM.Character = definition();
     return DOM.Character.definition = definition;
-  })(function(dependencies) {
+  })(function(dependencies = {}) {
     var BaseCharacter, Character, Tiled, Updater;
-    if (dependencies == null) {
-      dependencies = {};
-    }
     Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : DOM.Tiled;
     BaseCharacter = dependencies.hasOwnProperty("BaseCharacter") ? dependencies.BaseCharacter : Parallelio.Character.definition({
       Tiled: Tiled
     });
     Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
-    Character = (function(superClass) {
-      extend(Character, superClass);
-
-      function Character() {
-        Character.__super__.constructor.call(this);
+    Character = class Character extends BaseCharacter {
+      constructor() {
+        super();
         this.baseCls = 'character';
       }
 
-      return Character;
-
-    })(BaseCharacter);
+    };
     return Character;
   });
 
   (function(definition) {
     DOM.Damageable = definition();
     return DOM.Damageable.definition = definition;
-  })(function(dependencies) {
+  })(function(dependencies = {}) {
     var BaseDamageable, Damageable, Display, Updater;
-    if (dependencies == null) {
-      dependencies = {};
-    }
     BaseDamageable = dependencies.hasOwnProperty("BaseDamageable") ? dependencies.BaseDamageable : Parallelio.Damageable;
     Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
     Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
-    Damageable = (function(superClass) {
-      extend(Damageable, superClass);
+    Damageable = (function() {
+      class Damageable extends BaseDamageable {
+        constructor() {
+          super();
+          this.healthCls();
+          this.initDisplay();
+        }
+
+      };
 
       Damageable.extend(Display);
 
       Damageable.include(EventEmitter.prototype);
 
-      function Damageable() {
-        Damageable.__super__.constructor.call(this);
-        this.healthCls();
-        this.initDisplay();
-      }
-
       Damageable.properties({
         healthClsSteps: {
-          "default": 10
+          default: 10
         },
         healthCls: {
           updater: Updater.instance,
@@ -283,30 +255,28 @@
 
       return Damageable;
 
-    })(BaseDamageable);
+    }).call(this);
     return Damageable;
   });
 
   (function(definition) {
     DOM.Door = definition();
     return DOM.Door.definition = definition;
-  })(function(dependencies) {
+  })(function(dependencies = {}) {
     var BaseDoor, Door, Tiled, Updater;
-    if (dependencies == null) {
-      dependencies = {};
-    }
     Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : DOM.Tiled;
     BaseDoor = dependencies.hasOwnProperty("BaseDoor") ? dependencies.BaseDoor : Parallelio.Door.definition({
       Tiled: Tiled
     });
     Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
-    Door = (function(superClass) {
-      extend(Door, superClass);
+    Door = (function() {
+      class Door extends BaseDoor {
+        constructor(direction) {
+          super(direction);
+          this.baseCls = 'door';
+        }
 
-      function Door(direction) {
-        this.baseCls = 'door';
-        Door.__super__.constructor.call(this, direction);
-      }
+      };
 
       Door.properties({
         direction: {
@@ -327,35 +297,34 @@
 
       return Door;
 
-    })(BaseDoor);
+    }).call(this);
     return Door;
   });
 
   (function(definition) {
     DOM.Projectile = definition();
     return DOM.Projectile.definition = definition;
-  })(function(dependencies) {
+  })(function(dependencies = {}) {
     var BaseProjectile, Display, Projectile, Updater;
-    if (dependencies == null) {
-      dependencies = {};
-    }
     BaseProjectile = dependencies.hasOwnProperty("BaseProjectile") ? dependencies.BaseProjectile : Parallelio.Projectile;
     Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
     Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
-    Projectile = (function(superClass) {
-      extend(Projectile, superClass);
+    Projectile = (function() {
+      class Projectile extends BaseProjectile {
+        init() {
+          super.init();
+          this.baseCls = 'projectile';
+          return this.initDisplay();
+        }
 
-      function Projectile() {
-        return Projectile.__super__.constructor.apply(this, arguments);
-      }
+        destroy() {
+          this.destroyDisplay();
+          return Updater.instance.removeCallback(this.callback('invalidatePrcPath'));
+        }
+
+      };
 
       Projectile.extend(Display);
-
-      Projectile.prototype.init = function() {
-        Projectile.__super__.init.call(this);
-        this.baseCls = 'projectile';
-        return this.initDisplay();
-      };
 
       Projectile.properties({
         displayContainer: {
@@ -392,44 +361,41 @@
         }
       });
 
-      Projectile.prototype.destroy = function() {
-        this.destroyDisplay();
-        return Updater.instance.removeCallback(this.callback('invalidatePrcPath'));
-      };
-
       return Projectile;
 
-    })(BaseProjectile);
+    }).call(this);
     return Projectile;
   });
 
   (function(definition) {
     DOM.Tile = definition();
     return DOM.Tile.definition = definition;
-  })(function(dependencies) {
-    var BaseTile, Display, Floor, Tile;
-    if (dependencies == null) {
-      dependencies = {};
-    }
+  })(function(dependencies = {}) {
+    var BaseFloor, BaseTile, Display, Tile;
     BaseTile = dependencies.hasOwnProperty("BaseTile") ? dependencies.BaseTile : Parallelio.Tile;
-    Floor = dependencies.hasOwnProperty("Floor") ? dependencies.Floor : Parallelio.Floor;
+    BaseFloor = dependencies.hasOwnProperty("BaseFloor") ? dependencies.BaseFloor : Parallelio.Floor;
     Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
-    Tile = (function(superClass) {
-      extend(Tile, superClass);
+    Tile = (function() {
+      class Tile extends BaseTile {
+        init() {
+          super.init();
+          this.baseCls = 'tile';
+          return this.initDisplay();
+        }
 
-      function Tile() {
-        return Tile.__super__.constructor.apply(this, arguments);
-      }
+        tileToDisplayX(x) {
+          return x * Tile.size;
+        }
+
+        tileToDisplayY(y) {
+          return y * Tile.size;
+        }
+
+      };
 
       Tile.extend(Display);
 
       Tile.size = 20;
-
-      Tile.prototype.init = function() {
-        Tile.__super__.init.call(this);
-        this.baseCls = 'tile';
-        return this.initDisplay();
-      };
 
       Tile.properties({
         container: {},
@@ -456,62 +422,47 @@
         }
       });
 
-      Tile.prototype.tileToDisplayX = function(x) {
-        return x * Tile.size;
-      };
-
-      Tile.prototype.tileToDisplayY = function(y) {
-        return y * Tile.size;
-      };
-
       return Tile;
 
-    })(BaseTile);
-    Tile.Floor = (function(superClass) {
-      extend(Floor, superClass);
-
-      function Floor() {
-        return Floor.__super__.constructor.apply(this, arguments);
+    }).call(this);
+    Tile.Floor = class Floor extends BaseFloor.definition({
+        Tile: Tile
+      }) {
+      init() {
+        super.init();
+        return this.cls = 'floor';
       }
 
-      Floor.prototype.init = function() {
-        Floor.__super__.init.call(this);
-        return this.cls = 'floor';
-      };
-
-      return Floor;
-
-    })(Floor.definition({
-      Tile: Tile
-    }));
+    };
     return Tile;
   });
 
   (function(definition) {
     DOM.Ship = definition();
     return DOM.Ship.definition = definition;
-  })(function(dependencies) {
+  })(function(dependencies = {}) {
     var DefaultGenerator, Door, Ship, Tile, TileContainer;
-    if (dependencies == null) {
-      dependencies = {};
-    }
     Tile = dependencies.hasOwnProperty("Tile") ? dependencies.Tile : DOM.Tile;
     TileContainer = dependencies.hasOwnProperty("TileContainer") ? dependencies.TileContainer : Parallelio.TileContainer;
     DefaultGenerator = dependencies.hasOwnProperty("DefaultGenerator") ? dependencies.DefaultGenerator : Parallelio.RoomGenerator;
     Door = dependencies.hasOwnProperty("Door") ? dependencies.Door : DOM.Door;
-    Ship = (function(superClass) {
-      extend(Ship, superClass);
+    Ship = (function() {
+      class Ship extends TileContainer {
+        init() {
+          super.init();
+          return this.displayContainer;
+        }
 
-      function Ship() {
-        return Ship.__super__.constructor.apply(this, arguments);
-      }
+        generate(generator) {
+          generator = generator || (new Ship.Generator()).tap(function() {});
+          return generator.getTiles().forEach((tile) => {
+            return this.addTile(tile);
+          });
+        }
+
+      };
 
       Ship.include(EventEmitter.prototype);
-
-      Ship.prototype.init = function() {
-        Ship.__super__.init.call(this);
-        return this.displayContainer;
-      };
 
       Ship.properties({
         container: {},
@@ -539,65 +490,109 @@
         }
       });
 
-      Ship.prototype.generate = function(generator) {
-        generator = generator || (new Ship.Generator()).tap(function() {});
-        return generator.getTiles().forEach((function(_this) {
-          return function(tile) {
-            return _this.addTile(tile);
-          };
-        })(this));
-      };
-
       return Ship;
 
-    })(TileContainer);
-    Ship.Generator = (function(superClass) {
-      extend(Generator, superClass);
-
-      function Generator() {
-        return Generator.__super__.constructor.apply(this, arguments);
-      }
-
-      Generator.prototype.wallFactory = function(opt) {
+    }).call(this);
+    Ship.Generator = class Generator extends DefaultGenerator {
+      wallFactory(opt) {
         return (new Tile(opt.x, opt.y)).tap(function() {
           this.cls = 'wall';
           return this.walkable = false;
         });
-      };
+      }
 
-      Generator.prototype.floorFactory = function(opt) {
+      floorFactory(opt) {
         return new Tile.Floor(opt.x, opt.y);
-      };
+      }
 
-      Generator.prototype.doorFactory = function(opt) {
+      doorFactory(opt) {
         return (new Tile.Floor(opt.x, opt.y)).tap(function() {
           return this.addChild(new Door(opt.direction));
         });
-      };
+      }
 
-      return Generator;
-
-    })(DefaultGenerator);
+    };
     return Ship;
   });
 
   (function(definition) {
     DOM.View = definition();
     return DOM.View.definition = definition;
-  })(function(dependencies) {
+  })(function(dependencies = {}) {
     var Element, View;
-    if (dependencies == null) {
-      dependencies = {};
-    }
     Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Element;
-    View = (function(superClass) {
-      extend(View, superClass);
+    View = (function() {
+      class View extends Element {
+        constructor(display1 = null) {
+          super();
+          this.display = display1;
+          this.hovered = false;
+          this.keysInterval = {};
+        }
 
-      function View(display1) {
-        this.display = display1 != null ? display1 : null;
-        this.hovered = false;
-        this.keysInterval = {};
-      }
+        mouseEnter() {
+          this.hovered = true;
+          $('body').keydown(this.callback('keyDown'));
+          return $('body').keyup(this.callback('keyUp'));
+        }
+
+        mouseLeave() {
+          var code, interval, ref, results;
+          this.hovered = false;
+          $('body').off('keydown', this.callback('keyDown'));
+          $('body').off('keyup', this.callback('keyUp'));
+          ref = this.keysInterval;
+          results = [];
+          for (code in ref) {
+            interval = ref[code];
+            results.push(clearInterval(interval));
+          }
+          return results;
+        }
+
+        keyDown(e) {
+          var key;
+          if (View.directionkeys[e.which] != null) {
+            key = View.directionkeys[e.which];
+            if (this.keysInterval[key.name] != null) {
+              clearInterval(this.keysInterval[key.name]);
+            }
+            return this.keysInterval[key.name] = setInterval(() => {
+              this.x += key.x * 2;
+              return this.y += key.y * 2;
+            }, 10);
+          }
+        }
+
+        keyUp(e) {
+          var key;
+          if (View.directionkeys[e.which] != null) {
+            key = View.directionkeys[e.which];
+            if (this.keysInterval[key.name] != null) {
+              return clearInterval(this.keysInterval[key.name]);
+            }
+          }
+        }
+
+        updateDisplayPos() {
+          return $('.viewContent', this.display).css({
+            left: this.x + 'px',
+            top: this.y + 'px'
+          });
+        }
+
+        containsPoint(x, y) {
+          var container;
+          container = this.display[0];
+          while (container) {
+            x -= container.offsetLeft;
+            y -= container.offsetTop;
+            container = container.offsetParent;
+          }
+          return (0 <= x && x <= this.display.width()) && (0 <= y && y <= this.display.height());
+        }
+
+      };
 
       View.directionkeys = {
         38: {
@@ -624,13 +619,13 @@
 
       View.properties({
         x: {
-          "default": 0,
+          default: 0,
           change: function() {
             return this.updateDisplayPos();
           }
         },
         y: {
-          "default": 0,
+          default: 0,
           change: function() {
             return this.updateDisplayPos();
           }
@@ -647,84 +642,17 @@
         }
       });
 
-      View.prototype.mouseEnter = function() {
-        this.hovered = true;
-        $('body').keydown(this.callback('keyDown'));
-        return $('body').keyup(this.callback('keyUp'));
-      };
-
-      View.prototype.mouseLeave = function() {
-        var code, interval, ref, results;
-        this.hovered = false;
-        $('body').off('keydown', this.callback('keyDown'));
-        $('body').off('keyup', this.callback('keyUp'));
-        ref = this.keysInterval;
-        results = [];
-        for (code in ref) {
-          interval = ref[code];
-          results.push(clearInterval(interval));
-        }
-        return results;
-      };
-
-      View.prototype.keyDown = function(e) {
-        var key;
-        if (View.directionkeys[e.which] != null) {
-          key = View.directionkeys[e.which];
-          if (this.keysInterval[key.name] != null) {
-            clearInterval(this.keysInterval[key.name]);
-          }
-          return this.keysInterval[key.name] = setInterval((function(_this) {
-            return function() {
-              _this.x += key.x * 2;
-              return _this.y += key.y * 2;
-            };
-          })(this), 10);
-        }
-      };
-
-      View.prototype.keyUp = function(e) {
-        var key;
-        if (View.directionkeys[e.which] != null) {
-          key = View.directionkeys[e.which];
-          if (this.keysInterval[key.name] != null) {
-            return clearInterval(this.keysInterval[key.name]);
-          }
-        }
-      };
-
-      View.prototype.updateDisplayPos = function() {
-        return $('.viewContent', this.display).css({
-          left: this.x + 'px',
-          top: this.y + 'px'
-        });
-      };
-
-      View.prototype.containsPoint = function(x, y) {
-        var container;
-        container = this.display[0];
-        while (container) {
-          x -= container.offsetLeft;
-          y -= container.offsetTop;
-          container = container.offsetParent;
-        }
-        return (0 <= x && x <= this.display.width()) && (0 <= y && y <= this.display.height());
-      };
-
       return View;
 
-    })(Element);
+    }).call(this);
     return View;
   });
 
   (function(definition) {
     DOM.Weapon = definition();
     return DOM.Weapon.definition = definition;
-  })(function(dependencies) {
+  })(function(dependencies = {}) {
     var BaseWeapon, Damageable, Projectile, Tiled, Updater, Weapon;
-    if (dependencies == null) {
-      dependencies = {};
-    }
     Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : DOM.Tiled;
     Projectile = dependencies.hasOwnProperty("Projectile") ? dependencies.Projectile : DOM.Projectile;
     Damageable = dependencies.hasOwnProperty("Damageable") ? dependencies.Damageable : DOM.Damageable;
@@ -734,13 +662,14 @@
       Projectile: Projectile
     });
     Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
-    Weapon = (function(superClass) {
-      extend(Weapon, superClass);
+    Weapon = (function() {
+      class Weapon extends BaseWeapon {
+        constructor(direction) {
+          super(direction);
+          this.baseCls = 'weapon';
+        }
 
-      function Weapon(direction) {
-        this.baseCls = 'weapon';
-        Weapon.__super__.constructor.call(this, direction);
-      }
+      };
 
       Weapon.properties({
         direction: {
@@ -761,31 +690,33 @@
 
       return Weapon;
 
-    })(BaseWeapon);
+    }).call(this);
     return Weapon;
   });
 
   (function(definition) {
     DOM.Wire = definition();
     return DOM.Wire.definition = definition;
-  })(function(dependencies) {
+  })(function(dependencies = {}) {
     var BaseWire, Tiled, Updater, Wire;
-    if (dependencies == null) {
-      dependencies = {};
-    }
     Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : DOM.Tiled;
     BaseWire = dependencies.hasOwnProperty("BaseWire") ? dependencies.BaseWire : Parallelio.Wire.definition({
       Tiled: Tiled
     });
     Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
-    Wire = (function(superClass) {
-      extend(Wire, superClass);
+    Wire = (function() {
+      class Wire extends BaseWire {
+        constructor(wireType) {
+          super(wireType);
+          this.baseCls = 'wire';
+          this.connectedDirections;
+        }
 
-      function Wire(wireType) {
-        Wire.__super__.constructor.call(this, wireType);
-        this.baseCls = 'wire';
-        this.connectedDirections;
-      }
+        getClassFromDirection(d) {
+          return 'conn' + d.name.charAt(0).toUpperCase() + d.name.slice(1);
+        }
+
+      };
 
       Wire.properties({
         display: {
@@ -800,17 +731,13 @@
           },
           change: function(old) {
             if (old) {
-              old.forEach((function(_this) {
-                return function(d) {
-                  return _this.display.removeClass(_this.getClassFromDirection(d));
-                };
-              })(this));
+              old.forEach((d) => {
+                return this.display.removeClass(this.getClassFromDirection(d));
+              });
             }
-            return this.connectedDirections.forEach((function(_this) {
-              return function(d) {
-                return _this.display.addClass(_this.getClassFromDirection(d));
-              };
-            })(this));
+            return this.connectedDirections.forEach((d) => {
+              return this.display.addClass(this.getClassFromDirection(d));
+            });
           }
         },
         wireType: {
@@ -827,13 +754,9 @@
         }
       });
 
-      Wire.prototype.getClassFromDirection = function(d) {
-        return 'conn' + d.name.charAt(0).toUpperCase() + d.name.slice(1);
-      };
-
       return Wire;
 
-    })(BaseWire);
+    }).call(this);
     return Wire;
   });
 

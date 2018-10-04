@@ -4,8 +4,8 @@ Updater = require('./Updater')
 
 class Door extends BaseDoor
   constructor: (direction) ->
-    @baseCls = 'door'
     super(direction)
+    @baseCls = 'door'
 
   @properties
     direction:

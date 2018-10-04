@@ -1,5 +1,5 @@
 BaseTile = require('parallelio').Tile
-Floor = require('parallelio').Floor
+BaseFloor = require('parallelio').Floor
 Display = require('./Display')
 
 class Tile extends BaseTile
@@ -30,7 +30,7 @@ class Tile extends BaseTile
   tileToDisplayY: (y) ->
     y*Tile.size
 
-class Tile.Floor extends Floor.definition({Tile:Tile})
+class Tile.Floor extends BaseFloor.definition({Tile:Tile})
   init: ->
     super()
     @cls = 'floor'

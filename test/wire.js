@@ -20,22 +20,26 @@
       container = document.createElement("div");
       document.body.appendChild(container);
       this.display = container;
+      // tile with red wire
       r = function(opt) {
         return (new Tile(opt.x, opt.y)).tap(function() {
           return this.addChild(new Wire("red"));
         });
       };
+      // tile with blue wire
       b = function(opt) {
         return (new Tile(opt.x, opt.y)).tap(function() {
           return this.addChild(new Wire("blue"));
         });
       };
+      // tile with red and blue wire
       m = function(opt) {
         return (new Tile(opt.x, opt.y)).tap(function() {
           this.addChild(new Wire("red"));
           return this.addChild(new Wire("blue"));
         });
       };
+      // tile with no wire
       n = function(opt) {
         return new Tile(opt.x, opt.y);
       };

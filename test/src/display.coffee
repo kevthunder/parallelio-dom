@@ -5,6 +5,7 @@ describe 'Display', ->
   createBasicDisplay = ->
     class Test extends Display
       constructor: () ->
+        super()
         @baseCls = 'test'
 
     container = document.createElement("div");
@@ -29,6 +30,7 @@ describe 'Display', ->
   it 'can update position', ->
     class Test extends Display
       constructor: () ->
+        super()
         @baseCls = 'test'
         @initDisplay()
       @properties

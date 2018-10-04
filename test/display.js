@@ -1,7 +1,5 @@
 (function() {
-  var Display, assert,
-    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
+  var Display, assert;
 
   assert = chai.assert;
 
@@ -11,16 +9,13 @@
     var createBasicDisplay;
     createBasicDisplay = function() {
       var Test, container, test;
-      Test = (function(superClass) {
-        extend(Test, superClass);
-
-        function Test() {
+      Test = class Test extends Display {
+        constructor() {
+          super();
           this.baseCls = 'test';
         }
 
-        return Test;
-
-      })(Display);
+      };
       container = document.createElement("div");
       document.body.appendChild(container);
       test = (new Test()).tap(function() {
@@ -43,13 +38,15 @@
     });
     return it('can update position', function() {
       var Test, container, display, test;
-      Test = (function(superClass) {
-        extend(Test, superClass);
+      Test = (function() {
+        class Test extends Display {
+          constructor() {
+            super();
+            this.baseCls = 'test';
+            this.initDisplay();
+          }
 
-        function Test() {
-          this.baseCls = 'test';
-          this.initDisplay();
-        }
+        };
 
         Test.properties({
           displayX: {
@@ -66,7 +63,7 @@
 
         return Test;
 
-      })(Display);
+      }).call(this);
       container = document.createElement("div");
       document.body.appendChild(container);
       test = (new Test()).tap(function() {
