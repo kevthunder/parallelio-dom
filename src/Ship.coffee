@@ -14,7 +14,9 @@ class Ship extends TileContainer
     displayContainer:
       calcul: (invalidator) ->
         container = invalidator.prop('container')
-        if container?.getProperty('display')
+        if container?.getProperty('contentDisplay')
+          container.contentDisplay
+        else if container?.getProperty('display')
           container.display
       change: ->
         if @displayContainer?

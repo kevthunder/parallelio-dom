@@ -27,6 +27,9 @@ class View extends Element
         @updateDisplayPos()
         $(@display).mouseenter @callback('mouseEnter')
         $(@display).mouseleave @callback('mouseLeave')
+    contentDisplay:
+      calcul: ->
+        $('.viewContent', @display)
   mouseEnter: ->
     @hovered = true
     $('body').keydown( @callback('keyDown') )
