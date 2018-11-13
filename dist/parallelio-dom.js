@@ -50,7 +50,7 @@
     var Display, Element, EventEmitter, Updater;
     Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Element;
     Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
-    EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : require('spark-starter').EventEmitter;
+    EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : Parallelio.Spark.EventEmitter;
     Display = (function() {
       class Display extends Element {
         initDisplay() {
@@ -140,7 +140,7 @@
     var BaseTiled, Display, EventEmitter, Tiled;
     BaseTiled = dependencies.hasOwnProperty("BaseTiled") ? dependencies.BaseTiled : Parallelio.Tiled;
     Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
-    EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : require('spark-starter').EventEmitter;
+    EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : Parallelio.Spark.EventEmitter;
     Tiled = (function() {
       class Tiled extends BaseTiled {
         constructor() {
@@ -218,7 +218,7 @@
     BaseDamageable = dependencies.hasOwnProperty("BaseDamageable") ? dependencies.BaseDamageable : Parallelio.Damageable;
     Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
     Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
-    EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : require('spark-starter').EventEmitter;
+    EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : Parallelio.Spark.EventEmitter;
     Damageable = (function() {
       class Damageable extends BaseDamageable {
         constructor() {
@@ -449,7 +449,7 @@
     TileContainer = dependencies.hasOwnProperty("TileContainer") ? dependencies.TileContainer : Parallelio.TileContainer;
     DefaultGenerator = dependencies.hasOwnProperty("DefaultGenerator") ? dependencies.DefaultGenerator : Parallelio.RoomGenerator;
     Door = dependencies.hasOwnProperty("Door") ? dependencies.Door : DOM.Door;
-    EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : require('spark-starter').EventEmitter;
+    EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : Parallelio.Spark.EventEmitter;
     Ship = (function() {
       class Ship extends TileContainer {
         init() {

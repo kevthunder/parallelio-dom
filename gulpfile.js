@@ -21,9 +21,15 @@ gulp.task('coffee', function() {
 
 gulp.task('concat', function() {
   return gulp.src([
-    './src/*.coffee'
-  ])
-    .pipe(wrapper.compose({namespace:'Parallelio.DOM',aliases:{'parallelio':'Parallelio'}}))
+      './src/*.coffee'
+    ])
+    .pipe(wrapper.compose({
+      namespace: 'Parallelio.DOM',
+      aliases: {
+        'parallelio': 'Parallelio',
+        'spark-starter': 'Parallelio.Spark'
+      }
+    }))
     .pipe(concat('parallelio-dom.coffee'))
     .pipe(gulp.dest('./tmp/'));
 });
@@ -71,10 +77,21 @@ gulp.task('compress', gulp.series('full', function () {
     .pipe(gulp.dest('./dist/'));
 }));
 
+gulp.task('watchCoffee', function() {
+  return gulp.watch([
+    './src/**/*.coffee',
+    require.resolve('parallelio/dist/parallelio.js')
+  ], gulp.series('coffee', 'concatCoffee', 'compress'));
+});
+
 gulp.task('sass', function () {
   return gulp.src('./sass/parallelio-dom.sass')
     .pipe(sass().on('error', sass.logError))
     .pipe(gulp.dest('./css'));
+});
+
+gulp.task('watchSass', function () {
+  return gulp.watch(['./sass/**/*.html'], gulp.series('sass'));
 });
 
 gulp.task('coffeeTest', function() {
@@ -88,6 +105,8 @@ gulp.task('build', build = gulp.series('sass', 'coffee', 'concatCoffee', 'compre
     console.log('Build Complete');
     done();
 }));
+
+gulp.task('watch', gulp.parallel('build','watchSass','watchCoffee'));
 
 gulp.task('update', function() {
   return autoCommit.afterModuleUpdate(function(cb){
