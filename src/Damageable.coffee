@@ -1,6 +1,7 @@
 BaseDamageable = require('parallelio').Damageable
 Display = require('./Display')
 Updater = require('./Updater')
+EventEmitter = require('spark-starter').EventEmitter
 
 class Damageable extends BaseDamageable
   @extend Display

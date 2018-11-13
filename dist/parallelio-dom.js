@@ -47,9 +47,10 @@
     DOM.Display = definition();
     return DOM.Display.definition = definition;
   })(function(dependencies = {}) {
-    var Display, Element, Updater;
+    var Display, Element, EventEmitter, Updater;
     Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Element;
     Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
+    EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : require('spark-starter').EventEmitter;
     Display = (function() {
       class Display extends Element {
         initDisplay() {
@@ -136,9 +137,10 @@
     DOM.Tiled = definition();
     return DOM.Tiled.definition = definition;
   })(function(dependencies = {}) {
-    var BaseTiled, Display, Tiled;
+    var BaseTiled, Display, EventEmitter, Tiled;
     BaseTiled = dependencies.hasOwnProperty("BaseTiled") ? dependencies.BaseTiled : Parallelio.Tiled;
     Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
+    EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : require('spark-starter').EventEmitter;
     Tiled = (function() {
       class Tiled extends BaseTiled {
         constructor() {
@@ -212,10 +214,11 @@
     DOM.Damageable = definition();
     return DOM.Damageable.definition = definition;
   })(function(dependencies = {}) {
-    var BaseDamageable, Damageable, Display, Updater;
+    var BaseDamageable, Damageable, Display, EventEmitter, Updater;
     BaseDamageable = dependencies.hasOwnProperty("BaseDamageable") ? dependencies.BaseDamageable : Parallelio.Damageable;
     Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
     Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
+    EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : require('spark-starter').EventEmitter;
     Damageable = (function() {
       class Damageable extends BaseDamageable {
         constructor() {
@@ -441,11 +444,12 @@
     DOM.Ship = definition();
     return DOM.Ship.definition = definition;
   })(function(dependencies = {}) {
-    var DefaultGenerator, Door, Ship, Tile, TileContainer;
+    var DefaultGenerator, Door, EventEmitter, Ship, Tile, TileContainer;
     Tile = dependencies.hasOwnProperty("Tile") ? dependencies.Tile : DOM.Tile;
     TileContainer = dependencies.hasOwnProperty("TileContainer") ? dependencies.TileContainer : Parallelio.TileContainer;
     DefaultGenerator = dependencies.hasOwnProperty("DefaultGenerator") ? dependencies.DefaultGenerator : Parallelio.RoomGenerator;
     Door = dependencies.hasOwnProperty("Door") ? dependencies.Door : DOM.Door;
+    EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : require('spark-starter').EventEmitter;
     Ship = (function() {
       class Ship extends TileContainer {
         init() {
@@ -470,7 +474,9 @@
           calcul: function(invalidator) {
             var container;
             container = invalidator.prop('container');
-            if (container != null ? container.getProperty('display') : void 0) {
+            if (container != null ? container.getProperty('contentDisplay') : void 0) {
+              return container.contentDisplay;
+            } else if (container != null ? container.getProperty('display') : void 0) {
               return container.display;
             }
           },
@@ -638,6 +644,11 @@
             this.updateDisplayPos();
             $(this.display).mouseenter(this.callback('mouseEnter'));
             return $(this.display).mouseleave(this.callback('mouseLeave'));
+          }
+        },
+        contentDisplay: {
+          calcul: function() {
+            return $('.viewContent', this.display);
           }
         }
       });

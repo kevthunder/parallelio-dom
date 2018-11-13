@@ -36,9 +36,16 @@ gulp.task('concatCoffee', gulp.series('concat', function() {
 
 gulp.task('domPart', function() {
   return gulp.src([
-    './src/*.coffee'
-  ])
-    .pipe(wrapper.compose({namespace:'Parallelio.DOM',aliases:{'parallelio':'Parallelio'},partOf:'Parallelio'}))
+      './src/*.coffee'
+    ])
+    .pipe(wrapper.compose({
+      namespace: 'Parallelio.DOM',
+      aliases: {
+        'parallelio': 'Parallelio',
+        'spark-starter': 'Parallelio.Spark'
+      },
+      partOf: 'Parallelio'
+    }))
     .pipe(concat('dom-part.coffee'))
     .pipe(gulp.dest('./tmp/'));
 });

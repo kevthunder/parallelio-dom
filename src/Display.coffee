@@ -1,5 +1,6 @@
 Element = require('parallelio').Element
 Updater = require('./Updater')
+EventEmitter = require('spark-starter').EventEmitter
 
 class Display extends Element
   @include EventEmitter.prototype
