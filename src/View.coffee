@@ -1,10 +1,16 @@
-Element = require('parallelio').Element
+BaseView = require('parallelio').View
+Updater = require('./Updater')
+Display = require('./Display')
 
-class View extends Element
-  constructor: (@display = null) ->
+class View extends BaseView
+  @extend Display
+  constructor: (display = null) ->
     super()
+    if display?
+      @display = display
     @hovered = false
     @keysInterval = {}
+    @baseCls = 'view'
   @directionkeys = {
     38: {name: 'top',    x: 0,  y: -1}
     39: {name: 'right',  x: 1,  y: 0}
@@ -21,15 +27,33 @@ class View extends Element
       change: ->
         @updateDisplayPos()
     display:
+      calcul:(invalidator,original)->
+        display = original()
+        if $('.viewContent', display).length == 0
+          $(display).append('<div class="viewContent"></div>')
+        $(display).mouseenter @callback('mouseEnter')
+        $(display).mouseleave @callback('mouseLeave')
       change: ->
-        if $('.viewContent', @display).length == 0
-          $(@display).append('<div class="viewContent"></div>')
         @updateDisplayPos()
-        $(@display).mouseenter @callback('mouseEnter')
-        $(@display).mouseleave @callback('mouseLeave')
     contentDisplay:
       calcul: ->
         $('.viewContent', @display)
+    boundsStyles:
+      updater: Updater.instance
+      calcul: (invalidator)->
+        top: invalidator.prop('top',@bounds)*100 + '%'
+        left: invalidator.prop('left',@bounds)*100 + '%'
+        bottom: 1-invalidator.prop('bottom',@bounds)*100 + '%'
+        right: 1-invalidator.prop('right',@bounds)*100 + '%'
+      active: (invalidator)->
+        invalidator.propInitiated('display') and invalidator.prop('bounds')?
+      change: (old)->
+        @contentDisplay.css(@boundsStyles)
+
+  setDefaults: ->
+    super()
+    unless @displayContainer?
+      @displayContainer = $('body')
   mouseEnter: ->
     @hovered = true
     $('body').keydown( @callback('keyDown') )

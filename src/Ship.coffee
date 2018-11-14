@@ -28,6 +28,17 @@ class Ship extends TileContainer
           .addClass('ship')
         display.get(0)._parallelio_obj = this
         display
+    game:
+      change: (old)->
+        if @game 
+          @setDefaults()
+
+  setDefaults: ->
+    unless @displayContainer?
+      @displayContainer = @game.mainView.contentDisplay
+    unless @tiles.length > 0
+      @generate()
+      
   generate: (generator)->
     generator = generator || (new Ship.Generator()).tap ->
     generator.getTiles().forEach (tile)=>

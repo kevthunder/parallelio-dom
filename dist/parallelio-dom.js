@@ -305,6 +305,197 @@
   });
 
   (function(definition) {
+    DOM.View = definition();
+    return DOM.View.definition = definition;
+  })(function(dependencies = {}) {
+    var BaseView, Display, Updater, View;
+    BaseView = dependencies.hasOwnProperty("BaseView") ? dependencies.BaseView : Parallelio.View;
+    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
+    Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
+    View = (function() {
+      class View extends BaseView {
+        constructor(display = null) {
+          super();
+          if (display != null) {
+            this.display = display;
+          }
+          this.hovered = false;
+          this.keysInterval = {};
+          this.baseCls = 'view';
+        }
+
+        setDefaults() {
+          super.setDefaults();
+          if (this.displayContainer == null) {
+            return this.displayContainer = $('body');
+          }
+        }
+
+        mouseEnter() {
+          this.hovered = true;
+          $('body').keydown(this.callback('keyDown'));
+          return $('body').keyup(this.callback('keyUp'));
+        }
+
+        mouseLeave() {
+          var code, interval, ref, results;
+          this.hovered = false;
+          $('body').off('keydown', this.callback('keyDown'));
+          $('body').off('keyup', this.callback('keyUp'));
+          ref = this.keysInterval;
+          results = [];
+          for (code in ref) {
+            interval = ref[code];
+            results.push(clearInterval(interval));
+          }
+          return results;
+        }
+
+        keyDown(e) {
+          var key;
+          if (View.directionkeys[e.which] != null) {
+            key = View.directionkeys[e.which];
+            if (this.keysInterval[key.name] != null) {
+              clearInterval(this.keysInterval[key.name]);
+            }
+            return this.keysInterval[key.name] = setInterval(() => {
+              this.x += key.x * 2;
+              return this.y += key.y * 2;
+            }, 10);
+          }
+        }
+
+        keyUp(e) {
+          var key;
+          if (View.directionkeys[e.which] != null) {
+            key = View.directionkeys[e.which];
+            if (this.keysInterval[key.name] != null) {
+              return clearInterval(this.keysInterval[key.name]);
+            }
+          }
+        }
+
+        updateDisplayPos() {
+          return $('.viewContent', this.display).css({
+            left: this.x + 'px',
+            top: this.y + 'px'
+          });
+        }
+
+        containsPoint(x, y) {
+          var container;
+          container = this.display[0];
+          while (container) {
+            x -= container.offsetLeft;
+            y -= container.offsetTop;
+            container = container.offsetParent;
+          }
+          return (0 <= x && x <= this.display.width()) && (0 <= y && y <= this.display.height());
+        }
+
+      };
+
+      View.extend(Display);
+
+      View.directionkeys = {
+        38: {
+          name: 'top',
+          x: 0,
+          y: -1
+        },
+        39: {
+          name: 'right',
+          x: 1,
+          y: 0
+        },
+        40: {
+          name: 'bottom',
+          x: 0,
+          y: 1
+        },
+        37: {
+          name: 'left',
+          x: -1,
+          y: 0
+        }
+      };
+
+      View.properties({
+        x: {
+          default: 0,
+          change: function() {
+            return this.updateDisplayPos();
+          }
+        },
+        y: {
+          default: 0,
+          change: function() {
+            return this.updateDisplayPos();
+          }
+        },
+        display: {
+          calcul: function(invalidator, original) {
+            var display;
+            display = original();
+            if ($('.viewContent', display).length === 0) {
+              $(display).append('<div class="viewContent"></div>');
+            }
+            $(display).mouseenter(this.callback('mouseEnter'));
+            return $(display).mouseleave(this.callback('mouseLeave'));
+          },
+          change: function() {
+            return this.updateDisplayPos();
+          }
+        },
+        contentDisplay: {
+          calcul: function() {
+            return $('.viewContent', this.display);
+          }
+        },
+        boundsStyles: {
+          updater: Updater.instance,
+          calcul: function(invalidator) {
+            return {
+              top: invalidator.prop('top', this.bounds) * 100 + '%',
+              left: invalidator.prop('left', this.bounds) * 100 + '%',
+              bottom: 1 - invalidator.prop('bottom', this.bounds) * 100 + '%',
+              right: 1 - invalidator.prop('right', this.bounds) * 100 + '%'
+            };
+          },
+          active: function(invalidator) {
+            return invalidator.propInitiated('display') && (invalidator.prop('bounds') != null);
+          },
+          change: function(old) {
+            return this.contentDisplay.css(this.boundsStyles);
+          }
+        }
+      });
+
+      return View;
+
+    }).call(this);
+    return View;
+  });
+
+  (function(definition) {
+    DOM.Game = definition();
+    return DOM.Game.definition = definition;
+  })(function(dependencies = {}) {
+    var BaseGame, Game, View;
+    BaseGame = dependencies.hasOwnProperty("BaseGame") ? dependencies.BaseGame : Parallelio.Game;
+    View = dependencies.hasOwnProperty("View") ? dependencies.View : DOM.View;
+    Game = (function() {
+      class Game extends BaseGame {};
+
+      Game.prototype.defaultViewClass = View;
+
+      return Game;
+
+    }).call(this);
+    return Game;
+  });
+
+  (function(definition) {
     DOM.Projectile = definition();
     return DOM.Projectile.definition = definition;
   })(function(dependencies = {}) {
@@ -457,6 +648,15 @@
           return this.displayContainer;
         }
 
+        setDefaults() {
+          if (this.displayContainer == null) {
+            this.displayContainer = this.game.mainView.contentDisplay;
+          }
+          if (!(this.tiles.length > 0)) {
+            return this.generate();
+          }
+        }
+
         generate(generator) {
           generator = generator || (new Ship.Generator()).tap(function() {});
           return generator.getTiles().forEach((tile) => {
@@ -493,6 +693,13 @@
             display.get(0)._parallelio_obj = this;
             return display;
           }
+        },
+        game: {
+          change: function(old) {
+            if (this.game) {
+              return this.setDefaults();
+            }
+          }
         }
       });
 
@@ -519,144 +726,6 @@
 
     };
     return Ship;
-  });
-
-  (function(definition) {
-    DOM.View = definition();
-    return DOM.View.definition = definition;
-  })(function(dependencies = {}) {
-    var Element, View;
-    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Element;
-    View = (function() {
-      class View extends Element {
-        constructor(display1 = null) {
-          super();
-          this.display = display1;
-          this.hovered = false;
-          this.keysInterval = {};
-        }
-
-        mouseEnter() {
-          this.hovered = true;
-          $('body').keydown(this.callback('keyDown'));
-          return $('body').keyup(this.callback('keyUp'));
-        }
-
-        mouseLeave() {
-          var code, interval, ref, results;
-          this.hovered = false;
-          $('body').off('keydown', this.callback('keyDown'));
-          $('body').off('keyup', this.callback('keyUp'));
-          ref = this.keysInterval;
-          results = [];
-          for (code in ref) {
-            interval = ref[code];
-            results.push(clearInterval(interval));
-          }
-          return results;
-        }
-
-        keyDown(e) {
-          var key;
-          if (View.directionkeys[e.which] != null) {
-            key = View.directionkeys[e.which];
-            if (this.keysInterval[key.name] != null) {
-              clearInterval(this.keysInterval[key.name]);
-            }
-            return this.keysInterval[key.name] = setInterval(() => {
-              this.x += key.x * 2;
-              return this.y += key.y * 2;
-            }, 10);
-          }
-        }
-
-        keyUp(e) {
-          var key;
-          if (View.directionkeys[e.which] != null) {
-            key = View.directionkeys[e.which];
-            if (this.keysInterval[key.name] != null) {
-              return clearInterval(this.keysInterval[key.name]);
-            }
-          }
-        }
-
-        updateDisplayPos() {
-          return $('.viewContent', this.display).css({
-            left: this.x + 'px',
-            top: this.y + 'px'
-          });
-        }
-
-        containsPoint(x, y) {
-          var container;
-          container = this.display[0];
-          while (container) {
-            x -= container.offsetLeft;
-            y -= container.offsetTop;
-            container = container.offsetParent;
-          }
-          return (0 <= x && x <= this.display.width()) && (0 <= y && y <= this.display.height());
-        }
-
-      };
-
-      View.directionkeys = {
-        38: {
-          name: 'top',
-          x: 0,
-          y: -1
-        },
-        39: {
-          name: 'right',
-          x: 1,
-          y: 0
-        },
-        40: {
-          name: 'bottom',
-          x: 0,
-          y: 1
-        },
-        37: {
-          name: 'left',
-          x: -1,
-          y: 0
-        }
-      };
-
-      View.properties({
-        x: {
-          default: 0,
-          change: function() {
-            return this.updateDisplayPos();
-          }
-        },
-        y: {
-          default: 0,
-          change: function() {
-            return this.updateDisplayPos();
-          }
-        },
-        display: {
-          change: function() {
-            if ($('.viewContent', this.display).length === 0) {
-              $(this.display).append('<div class="viewContent"></div>');
-            }
-            this.updateDisplayPos();
-            $(this.display).mouseenter(this.callback('mouseEnter'));
-            return $(this.display).mouseleave(this.callback('mouseLeave'));
-          }
-        },
-        contentDisplay: {
-          calcul: function() {
-            return $('.viewContent', this.display);
-          }
-        }
-      });
-
-      return View;
-
-    }).call(this);
-    return View;
   });
 
   (function(definition) {
