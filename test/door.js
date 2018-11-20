@@ -8,7 +8,7 @@
   Door = Parallelio.DOM.Door;
 
   describe('Door', function() {
-    return it('create a div', function() {
+    return it('create a div', function(done) {
       var container, door, tile;
       container = document.createElement("div");
       document.body.appendChild(container);
@@ -18,8 +18,11 @@
       door = (new Door()).tap(function() {
         return this.displayContainer = container;
       });
-      assert.isNotNull(container.querySelector('.tile'));
-      return assert.isNotNull(container.querySelector('.door'));
+      return window.requestAnimationFrame(function() {
+        assert.isNotNull(container.querySelector('.tile'));
+        assert.isNotNull(container.querySelector('.door'));
+        return done();
+      });
     });
   });
 

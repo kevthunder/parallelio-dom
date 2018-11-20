@@ -23,21 +23,26 @@
       });
       return container;
     };
-    it('create a div', function() {
+    it('create a div', function(done) {
       var container;
       container = createBasicDisplay();
-      return assert.isNotNull(container.querySelector('.test'));
-    });
-    it('create a div with no initial position', function() {
-      var container, display;
-      container = createBasicDisplay();
-      display = container.querySelector('.test');
       return window.requestAnimationFrame(function() {
-        return assert.isFalse(display.hasAttribute("style"));
+        assert.isNotNull(container.querySelector('.test'));
+        return done();
       });
     });
-    return it('can update position', function() {
-      var Test, container, display, test;
+    it('create a div with no initial position', function(done) {
+      var container;
+      container = createBasicDisplay();
+      return window.requestAnimationFrame(function() {
+        var display;
+        display = container.querySelector('.test');
+        assert.isFalse(display.hasAttribute("style"));
+        return done();
+      });
+    });
+    return it('can update position', function(done) {
+      var Test, container, test;
       Test = (function() {
         class Test extends Display {
           constructor() {
@@ -69,11 +74,13 @@
       test = (new Test()).tap(function() {
         return this.displayContainer = container;
       });
-      display = container.querySelector('.test');
       return window.requestAnimationFrame(function() {
+        var display;
+        display = container.querySelector('.test');
         assert.isTrue(display.hasAttribute("style"));
         assert.equal("5px", display.style.top);
-        return assert.equal("5px", display.style.top);
+        assert.equal("5px", display.style.top);
+        return done();
       });
     });
   });

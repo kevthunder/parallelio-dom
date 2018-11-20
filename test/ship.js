@@ -6,14 +6,17 @@
   Ship = Parallelio.DOM.Ship;
 
   describe('Ship', function() {
-    it('create a div', function() {
+    it('create a div', function(done) {
       var container, ship;
       container = document.createElement("div");
       document.body.appendChild(container);
       ship = (new Ship()).tap(function() {
         return this.displayContainer = container;
       });
-      return assert.isNotNull(container.querySelector('.ship'));
+      return window.requestAnimationFrame(function() {
+        assert.isNotNull(container.querySelector('.ship'));
+        return done();
+      });
     });
     return it('generate tiles', function(done) {
       var container, ship;

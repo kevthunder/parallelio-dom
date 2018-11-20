@@ -16,18 +16,22 @@ describe 'Display', ->
 
     return container
 
-  it 'create a div', ->
+  it 'create a div', (done)->
     container = createBasicDisplay()
-    assert.isNotNull container.querySelector('.test')
-
-  it 'create a div with no initial position', ->
-    container = createBasicDisplay()
-    display = container.querySelector('.test')
 
     window.requestAnimationFrame ->
-      assert.isFalse display.hasAttribute("style")
+      assert.isNotNull container.querySelector('.test')
+      done()
 
-  it 'can update position', ->
+  it 'create a div with no initial position', (done)->
+    container = createBasicDisplay()
+
+    window.requestAnimationFrame ->
+      display = container.querySelector('.test')
+      assert.isFalse display.hasAttribute("style")
+      done()
+
+  it 'can update position', (done)->
     class Test extends Display
       constructor: () ->
         super()
@@ -45,12 +49,12 @@ describe 'Display', ->
     test = (new Test()).tap ->
       @displayContainer = container
 
-    display = container.querySelector('.test')
-
     window.requestAnimationFrame ->
+      display = container.querySelector('.test')
       assert.isTrue display.hasAttribute("style")
       assert.equal "5px", display.style.top
       assert.equal "5px", display.style.top
+      done()
 
 
     
