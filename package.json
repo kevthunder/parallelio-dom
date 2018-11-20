@@ -1,6 +1,6 @@
 {
   "name": "parallelio-dom",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "DOM display elements for Parallelio",
   "main": "lib/parallelio-dom.js",
   "repository": {
