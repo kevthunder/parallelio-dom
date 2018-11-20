@@ -5535,6 +5535,7 @@
           this.hovered = false;
           this.keysInterval = {};
           this.baseCls = 'view';
+          this.boundsStyles;
         }
 
         setDefaults() {
@@ -5614,21 +5615,21 @@
         38: {
           name: 'top',
           x: 0,
-          y: -1
+          y: 1
         },
         39: {
           name: 'right',
-          x: 1,
+          x: -1,
           y: 0
         },
         40: {
           name: 'bottom',
           x: 0,
-          y: 1
+          y: -1
         },
         37: {
           name: 'left',
-          x: -1,
+          x: 1,
           y: 0
         }
       };
@@ -5671,15 +5672,15 @@
             return {
               top: invalidator.prop('top', this.bounds) * 100 + '%',
               left: invalidator.prop('left', this.bounds) * 100 + '%',
-              bottom: 1 - invalidator.prop('bottom', this.bounds) * 100 + '%',
-              right: 1 - invalidator.prop('right', this.bounds) * 100 + '%'
+              bottom: (1 - invalidator.prop('bottom', this.bounds)) * 100 + '%',
+              right: (1 - invalidator.prop('right', this.bounds)) * 100 + '%'
             };
           },
           active: function(invalidator) {
             return invalidator.propInitiated('display') && (invalidator.prop('bounds') != null);
           },
           change: function(old) {
-            return this.contentDisplay.css(this.boundsStyles);
+            return this.display.css(this.boundsStyles);
           }
         }
       });

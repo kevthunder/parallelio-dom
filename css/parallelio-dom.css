@@ -1,4 +1,11 @@
 @charset "UTF-8";
+.view {
+  background: #000;
+  position: absolute;
+  overflow: hidden; }
+  .view .viewContent {
+    position: absolute; }
+
 .tile {
   position: absolute;
   background: #333;

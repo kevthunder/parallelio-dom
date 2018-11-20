@@ -11,11 +11,12 @@ class View extends BaseView
     @hovered = false
     @keysInterval = {}
     @baseCls = 'view'
+    @boundsStyles
   @directionkeys = {
-    38: {name: 'top',    x: 0,  y: -1}
-    39: {name: 'right',  x: 1,  y: 0}
-    40: {name: 'bottom', x: 0,  y: 1}
-    37: {name: 'left',   x: -1, y: 0}
+    38: {name: 'top',    x: 0,  y: 1}
+    39: {name: 'right',  x: -1,  y: 0}
+    40: {name: 'bottom', x: 0,  y: -1}
+    37: {name: 'left',   x: 1, y: 0}
   }
   @properties
     x:
@@ -43,12 +44,12 @@ class View extends BaseView
       calcul: (invalidator)->
         top: invalidator.prop('top',@bounds)*100 + '%'
         left: invalidator.prop('left',@bounds)*100 + '%'
-        bottom: 1-invalidator.prop('bottom',@bounds)*100 + '%'
-        right: 1-invalidator.prop('right',@bounds)*100 + '%'
+        bottom: (1-invalidator.prop('bottom',@bounds))*100 + '%'
+        right: (1-invalidator.prop('right',@bounds))*100 + '%'
       active: (invalidator)->
         invalidator.propInitiated('display') and invalidator.prop('bounds')?
       change: (old)->
-        @contentDisplay.css(@boundsStyles)
+        @display.css(@boundsStyles)
 
   setDefaults: ->
     super()
