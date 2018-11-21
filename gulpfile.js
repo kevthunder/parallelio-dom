@@ -91,7 +91,7 @@ gulp.task('sass', function () {
 });
 
 gulp.task('watchSass', function () {
-  return gulp.watch(['./sass/**/*.html'], gulp.series('sass'));
+  return gulp.watch(['./sass/**/*.sass'], gulp.series('sass'));
 });
 
 gulp.task('coffeeTest', function() {

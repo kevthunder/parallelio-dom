@@ -38,6 +38,8 @@ class Ship extends TileContainer
       @displayContainer = @game.mainView.contentDisplay
     unless @tiles.length > 0
       @generate()
+    unless @game.mainTileContainer?
+      @game.mainTileContainer = this
       
   generate: (generator)->
     generator = generator || (new Ship.Generator()).tap ->
