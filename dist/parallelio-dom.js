@@ -191,22 +191,113 @@
   });
 
   (function(definition) {
+    DOM.Door = definition();
+    return DOM.Door.definition = definition;
+  })(function(dependencies = {}) {
+    var BaseDoor, Door, Element, Tiled, Updater;
+    Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : DOM.Tiled;
+    BaseDoor = dependencies.hasOwnProperty("BaseDoor") ? dependencies.BaseDoor : Parallelio.Door;
+    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
+    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
+    Door = (function() {
+      class Door extends BaseDoor {
+        constructor(direction) {
+          super(direction);
+          this.initDisplay();
+          this.open;
+          this.baseCls = 'door';
+        }
+
+      };
+
+      Door.extend(Tiled.definition({
+        BaseTiled: Element
+      }));
+
+      Door.properties({
+        direction: {
+          updater: Updater.instance,
+          active: function(invalidator) {
+            return invalidator.propInitiated('display');
+          },
+          change: function(old) {
+            if (old != null) {
+              this.display.removeClass(old);
+            }
+            if (this.direction != null) {
+              return this.display.addClass(this.direction);
+            }
+          }
+        },
+        open: {
+          updater: Updater.instance,
+          active: function(invalidator) {
+            return invalidator.propInitiated('display');
+          },
+          change: function(old) {
+            this.display.toggleClass('close', !this.open);
+            return this.display.toggleClass('open', this.open);
+          }
+        }
+      });
+
+      return Door;
+
+    }).call(this);
+    return Door;
+  });
+
+  (function(definition) {
+    DOM.AutomaticDoor = definition();
+    return DOM.AutomaticDoor.definition = definition;
+  })(function(dependencies = {}) {
+    var AutomaticDoor, BaseAutomaticDoor, Door;
+    Door = dependencies.hasOwnProperty("Door") ? dependencies.Door : DOM.Door;
+    BaseAutomaticDoor = dependencies.hasOwnProperty("BaseAutomaticDoor") ? dependencies.BaseAutomaticDoor : Parallelio.AutomaticDoor;
+    AutomaticDoor = class AutomaticDoor extends Door.definition({
+        BaseDoor: BaseAutomaticDoor
+      }) {};
+    return AutomaticDoor;
+  });
+
+  (function(definition) {
     DOM.Character = definition();
     return DOM.Character.definition = definition;
   })(function(dependencies = {}) {
-    var BaseCharacter, Character, Tiled, Updater;
+    var BaseCharacter, Character, Element, Tiled, Updater;
     Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : DOM.Tiled;
-    BaseCharacter = dependencies.hasOwnProperty("BaseCharacter") ? dependencies.BaseCharacter : Parallelio.Character.definition({
-      Tiled: Tiled
-    });
+    BaseCharacter = dependencies.hasOwnProperty("BaseCharacter") ? dependencies.BaseCharacter : Parallelio.Character;
     Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
-    Character = class Character extends BaseCharacter {
-      constructor() {
-        super();
-        this.baseCls = 'character';
-      }
+    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
+    Character = (function() {
+      class Character extends BaseCharacter {
+        constructor() {
+          super();
+          this.initDisplay();
+          this.baseCls = 'character';
+        }
 
-    };
+      };
+
+      Character.extend(Tiled.definition({
+        BaseTiled: Element
+      }));
+
+      Character.properties({
+        selected: {
+          updater: Updater.instance,
+          active: function(invalidator) {
+            return invalidator.propInitiated('display');
+          },
+          change: function(old) {
+            return this.display.toggleClass('selected', this.selected);
+          }
+        }
+      });
+
+      return Character;
+
+    }).call(this);
     return Character;
   });
 
@@ -263,45 +354,79 @@
   });
 
   (function(definition) {
-    DOM.Door = definition();
-    return DOM.Door.definition = definition;
+    DOM.PlayerController = definition();
+    return DOM.PlayerController.definition = definition;
   })(function(dependencies = {}) {
-    var BaseDoor, Door, Tiled, Updater;
-    Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : DOM.Tiled;
-    BaseDoor = dependencies.hasOwnProperty("BaseDoor") ? dependencies.BaseDoor : Parallelio.Door.definition({
-      Tiled: Tiled
-    });
-    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
-    Door = (function() {
-      class Door extends BaseDoor {
-        constructor(direction) {
-          super(direction);
-          this.baseCls = 'door';
+    var Element, PlayerController;
+    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
+    PlayerController = (function() {
+      class PlayerController extends Element {
+        constructor(options) {
+          super();
+          this.setProperties(options);
+        }
+
+        setDefaults() {
+          if (!this.gameDisplay) {
+            return this.gameDisplay = document.body;
+          }
+        }
+
+        checkFocus(e) {
+          return this._bubbleUp(e.target, (target) => {
+            if (this.player.canFocusOn(target)) {
+              this.player.focused = target;
+              return true;
+            }
+          });
+        }
+
+        checkTargetOrSelectable(e) {
+          return this._bubbleUp(e.target, (target) => {
+            var action;
+            if (action = this.player.canTargetActionOn(target)) {
+              this.player.selectedAction = action;
+              this.player.setActionTarget(target);
+              return true;
+            } else if (this.player.canSelect(target)) {
+              this.player.selected = target;
+              return true;
+            }
+          });
+        }
+
+        _bubbleUp(target, stopCallback) {
+          var ref;
+          while (target) {
+            target = target._parallelio_obj != null ? target._parallelio_obj : target.parentNode != null ? target.parentNode : stopCallback(target) ? null : target.tile != null ? target.tile : ((ref = target.display) != null ? ref.get(0).parentNode : void 0) != null ? target.display.get(0).parentNode : null;
+          }
+          return null;
         }
 
       };
 
-      Door.properties({
-        direction: {
-          updater: Updater.instance,
-          active: function(invalidator) {
-            return invalidator.propInitiated('display');
-          },
-          change: function(old) {
-            if (old != null) {
-              this.display.removeClass(old);
+      PlayerController.properties({
+        player: {
+          change: function() {
+            if (this.player) {
+              return this.setDefaults();
             }
-            if (this.direction != null) {
-              return this.display.addClass(this.direction);
+          }
+        },
+        gameDisplay: {
+          change: function() {
+            if (this.gameDisplay) {
+              $(this.gameDisplay).on('click', this.callback('checkTargetOrSelectable'));
+              return $(this.gameDisplay).on('mouseover', this.callback('checkFocus'));
             }
           }
         }
       });
 
-      return Door;
+      return PlayerController;
 
     }).call(this);
-    return Door;
+    return PlayerController;
   });
 
   (function(definition) {
@@ -482,13 +607,28 @@
     DOM.Game = definition();
     return DOM.Game.definition = definition;
   })(function(dependencies = {}) {
-    var BaseGame, Game, View;
+    var BaseGame, Game, PlayerController, Updater, View;
     BaseGame = dependencies.hasOwnProperty("BaseGame") ? dependencies.BaseGame : Parallelio.Game;
     View = dependencies.hasOwnProperty("View") ? dependencies.View : DOM.View;
+    PlayerController = dependencies.hasOwnProperty("PlayerController") ? dependencies.PlayerController : DOM.PlayerController;
+    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
     Game = (function() {
       class Game extends BaseGame {};
 
+      Game.properties({
+        timing: {
+          calcul: function(invalidator, original) {
+            var timing;
+            timing = original();
+            timing.updater = Updater.instance;
+            return timing;
+          }
+        }
+      });
+
       Game.prototype.defaultViewClass = View;
+
+      Game.prototype.defaultPlayerControllerClass = PlayerController;
 
       return Game;
 
@@ -640,7 +780,7 @@
     Tile = dependencies.hasOwnProperty("Tile") ? dependencies.Tile : DOM.Tile;
     TileContainer = dependencies.hasOwnProperty("TileContainer") ? dependencies.TileContainer : Parallelio.TileContainer;
     DefaultGenerator = dependencies.hasOwnProperty("DefaultGenerator") ? dependencies.DefaultGenerator : Parallelio.RoomGenerator;
-    Door = dependencies.hasOwnProperty("Door") ? dependencies.Door : DOM.Door;
+    Door = dependencies.hasOwnProperty("Door") ? dependencies.Door : DOM.AutomaticDoor;
     EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : Parallelio.Spark.EventEmitter;
     Ship = (function() {
       class Ship extends TileContainer {

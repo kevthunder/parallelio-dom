@@ -4,8 +4,10 @@
 .character
   z-index: 10
   position: absolute
-  font-size: $tilesize
-  width: $tilesize
+  font-size: $tilesize - 1
+  width: $tilesize - 1
+  margin-top: $tilesize/-2
+  margin-left: $tilesize/-2
   text-align: center
   &:before
     @include fa-icon($fa-var-male)

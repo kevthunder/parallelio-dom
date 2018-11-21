@@ -1,7 +1,7 @@
 Tile = require('./Tile')
 TileContainer = require('parallelio').TileContainer
 DefaultGenerator = require('parallelio').RoomGenerator
-Door = require('./Door')
+Door = require('./AutomaticDoor')
 EventEmitter = require('spark-starter').EventEmitter
 
 class Ship extends TileContainer
