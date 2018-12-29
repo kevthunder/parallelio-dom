@@ -10,5 +10,11 @@ class Game extends BaseGame
         timing = original()
         timing.updater = Updater.instance
         timing
+    mainUI:
+      calcul: ->
+        div = document.createElement("div");
+        div.classList.add("ui")
+        document.body.appendChild(div)
+        div
   defaultViewClass: View
   defaultPlayerControllerClass: PlayerController

@@ -905,7 +905,11 @@
               return a === b;
             };
           }
-          old = this.copy(old.slice());
+          if (old != null) {
+            old = this.copy(old.slice());
+          } else {
+            old = [];
+          }
           return this.count() !== old.length || (ordered ? this.some(function(val, i) {
             return !compareFunction(old.get(i), val);
           }) : this.some(function(a) {
@@ -1257,6 +1261,17 @@
           } else {
             return target[prop];
           }
+        }
+
+        propPath(path, target = this.obj) {
+          var prop, val;
+          path = path.split('.');
+          val = target;
+          while ((val != null) && path.length > 0) {
+            prop = path.shift();
+            val = this.prop(prop, val);
+          }
+          return val;
         }
 
         propInitiated(prop, target = this.obj) {
@@ -2148,10 +2163,10 @@
     Timing = dependencies.hasOwnProperty("Timing") ? dependencies.Timing : Parallelio.Timing;
     PathWalk = (function() {
       class PathWalk extends Element {
-        constructor(walker, path, options) {
+        constructor(walker, path1, options) {
           super();
           this.walker = walker;
-          this.path = path;
+          this.path = path1;
           this.setProperties(options);
         }
 
@@ -2298,8 +2313,10 @@
             return true;
           } else if (!this.started) {
             this.started = true;
-            this.addNextSteps();
-            return true;
+            if (this.tileIsValid(this.to)) {
+              this.addNextSteps();
+              return true;
+            }
           }
         }
 
@@ -2345,7 +2362,7 @@
           if (this.validTileCallback != null) {
             return this.validTileCallback(tile);
           } else {
-            return !tile.emulated || (tile.tile !== 0 && tile.tile !== false);
+            return (tile != null) && (!tile.emulated || (tile.tile !== 0 && tile.tile !== false));
           }
         }
 
@@ -2585,6 +2602,16 @@
           this.setProperties(options);
         }
 
+        withActor(actor) {
+          if (this.actor !== actor) {
+            return this.copyWith({
+              actor: actor
+            });
+          } else {
+            return this;
+          }
+        }
+
         copyWith(options) {
           return new this.constructor(Object.assign({
             base: this
@@ -2595,8 +2622,12 @@
           return this.execute();
         }
 
+        validActor() {
+          return this.actor != null;
+        }
+
         isReady() {
-          return true;
+          return this.validActor();
         }
 
       };
@@ -2638,7 +2669,7 @@
         }
 
         validTarget() {
-          return this.actor != null;
+          return this.target != null;
         }
 
         isReady() {
@@ -2839,6 +2870,18 @@
               actor: this
             });
           }
+        },
+        availableActions: {
+          collection: true,
+          calcul: function(invalidator) {
+            var tile;
+            tile = invalidator.prop("tile");
+            if (tile) {
+              return invalidator.prop("providedActions", tile);
+            } else {
+              return [];
+            }
+          }
         }
       });
 
@@ -2858,7 +2901,6 @@
         }
 
         validTarget() {
-          //todo: this will be slow for invalid targets
           this.pathFinder.calcul();
           return this.pathFinder.solution != null;
         }
@@ -3554,99 +3596,6 @@
   });
 
   (function(definition) {
-    Parallelio.Player = definition();
-    return Parallelio.Player.definition = definition;
-  })(function(dependencies = {}) {
-    var Element, Player;
-    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
-    Player = (function() {
-      class Player extends Element {
-        constructor(options) {
-          super();
-          this.setProperties(options);
-        }
-
-        setDefaults() {
-          var first;
-          first = this.game.players.length === 0;
-          this.game.players.add(this);
-          if (first && !this.controller && this.game.defaultPlayerControllerClass) {
-            return this.controller = new this.game.defaultPlayerControllerClass();
-          }
-        }
-
-        canTargetActionOn(elem) {
-          var action, ref3;
-          action = this.selectedAction || ((ref3 = this.selected) != null ? ref3.defaultAction : void 0);
-          return (action != null) && typeof action.canTarget === "function" && action.canTarget(elem);
-        }
-
-        canSelect(elem) {
-          return typeof elem.isSelectableBy === "function" && elem.isSelectableBy(this);
-        }
-
-        canFocusOn(elem) {
-          if (typeof elem.IsFocusableBy === "function") {
-            return elem.IsFocusableBy(this);
-          } else if (typeof elem.IsSelectableBy === "function") {
-            return elem.IsSelectableBy(this);
-          }
-        }
-
-        setActionTarget(elem) {
-          var action, ref3;
-          action = this.selectedAction || ((ref3 = this.selected) != null ? ref3.defaultAction : void 0);
-          action = action.withTarget(elem);
-          if (action.isReady()) {
-            action.start();
-            return this.selectedAction = null;
-          } else {
-            return this.selectedAction = action;
-          }
-        }
-
-      };
-
-      Player.properties({
-        name: {
-          default: 'Player'
-        },
-        focused: {},
-        selected: {
-          change: function(old) {
-            var ref3;
-            if (old != null ? old.getProperty('selected') : void 0) {
-              old.selected = false;
-            }
-            if ((ref3 = this.selected) != null ? ref3.getProperty('selected') : void 0) {
-              return this.selected.selected = this;
-            }
-          }
-        },
-        selectedAction: {},
-        controller: {
-          change: function(old) {
-            if (this.controller) {
-              return this.controller.player = this;
-            }
-          }
-        },
-        game: {
-          change: function(old) {
-            if (this.game) {
-              return this.setDefaults();
-            }
-          }
-        }
-      });
-
-      return Player;
-
-    }).call(this);
-    return Player;
-  });
-
-  (function(definition) {
     Parallelio.Spark.EventEmitter = definition();
     return Parallelio.Spark.EventEmitter.definition = definition;
   })(function() {
@@ -3776,6 +3725,102 @@
 
     }).call(this);
     return GridCell;
+  });
+
+  (function(definition) {
+    Parallelio.Player = definition();
+    return Parallelio.Player.definition = definition;
+  })(function(dependencies = {}) {
+    var Element, EventEmitter, Player;
+    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
+    EventEmitter = dependencies.hasOwnProperty("EventEmitter") ? dependencies.EventEmitter : Parallelio.Spark.EventEmitter;
+    Player = (function() {
+      class Player extends Element {
+        constructor(options) {
+          super();
+          this.setProperties(options);
+        }
+
+        setDefaults() {
+          var first;
+          first = this.game.players.length === 0;
+          this.game.players.add(this);
+          if (first && !this.controller && this.game.defaultPlayerControllerClass) {
+            return this.controller = new this.game.defaultPlayerControllerClass();
+          }
+        }
+
+        canTargetActionOn(elem) {
+          var action, ref3;
+          action = this.selectedAction || ((ref3 = this.selected) != null ? ref3.defaultAction : void 0);
+          return (action != null) && typeof action.canTarget === "function" && action.canTarget(elem);
+        }
+
+        canSelect(elem) {
+          return typeof elem.isSelectableBy === "function" && elem.isSelectableBy(this);
+        }
+
+        canFocusOn(elem) {
+          if (typeof elem.IsFocusableBy === "function") {
+            return elem.IsFocusableBy(this);
+          } else if (typeof elem.IsSelectableBy === "function") {
+            return elem.IsSelectableBy(this);
+          }
+        }
+
+        setActionTarget(elem) {
+          var action, ref3;
+          action = this.selectedAction || ((ref3 = this.selected) != null ? ref3.defaultAction : void 0);
+          action = action.withTarget(elem);
+          if (action.isReady()) {
+            action.start();
+            return this.selectedAction = null;
+          } else {
+            return this.selectedAction = action;
+          }
+        }
+
+      };
+
+      Player.include(EventEmitter.prototype);
+
+      Player.properties({
+        name: {
+          default: 'Player'
+        },
+        focused: {},
+        selected: {
+          change: function(old) {
+            var ref3;
+            if (old != null ? old.getProperty('selected') : void 0) {
+              old.selected = false;
+            }
+            if ((ref3 = this.selected) != null ? ref3.getProperty('selected') : void 0) {
+              return this.selected.selected = this;
+            }
+          }
+        },
+        selectedAction: {},
+        controller: {
+          change: function(old) {
+            if (this.controller) {
+              return this.controller.player = this;
+            }
+          }
+        },
+        game: {
+          change: function(old) {
+            if (this.game) {
+              return this.setDefaults();
+            }
+          }
+        }
+      });
+
+      return Player;
+
+    }).call(this);
+    return Player;
   });
 
   (function(definition) {
@@ -4055,6 +4100,43 @@
 
     }).call(this);
     return Game;
+  });
+
+  (function(definition) {
+    Parallelio.Obstacle = definition();
+    return Parallelio.Obstacle.definition = definition;
+  })(function(dependencies = {}) {
+    var Obstacle, Tiled;
+    Tiled = dependencies.hasOwnProperty("Tiled") ? dependencies.Tiled : Parallelio.Tiled;
+    Obstacle = (function() {
+      class Obstacle extends Tiled {
+        updateWalkables(old) {
+          var ref3, ref4;
+          if (old != null) {
+            if ((ref3 = old.walkableMembers) != null) {
+              ref3.removeRef('walkable', this);
+            }
+          }
+          if (this.tile) {
+            return (ref4 = this.tile.walkableMembers) != null ? ref4.setValueRef(false, 'walkable', this) : void 0;
+          }
+        }
+
+      };
+
+      Obstacle.properties({
+        tile: {
+          change: function(old, overrided) {
+            overrided(old);
+            return this.updateWalkables(old);
+          }
+        }
+      });
+
+      return Obstacle;
+
+    }).call(this);
+    return Obstacle;
   });
 
   (function(definition) {
@@ -5503,6 +5585,163 @@
     return Wire;
   });
 
+  (function(definition) {
+    Parallelio.ActionProvider = definition();
+    return Parallelio.ActionProvider.definition = definition;
+  })(function(dependencies = {}) {
+    var ActionProvider, Element;
+    Element = dependencies.hasOwnProperty("Element") ? dependencies.Element : Parallelio.Spark.Element;
+    ActionProvider = (function() {
+      class ActionProvider extends Element {};
+
+      ActionProvider.properties({
+        providedActions: {
+          collection: true
+        }
+      });
+
+      return ActionProvider;
+
+    }).call(this);
+    return ActionProvider;
+  });
+
+  (function(definition) {
+    Parallelio.SimpleActionProvider = definition();
+    return Parallelio.SimpleActionProvider.definition = definition;
+  })(function(dependencies = {}) {
+    var ActionProvider, SimpleActionProvider;
+    ActionProvider = dependencies.hasOwnProperty("ActionProvider") ? dependencies.ActionProvider : Parallelio.ActionProvider;
+    SimpleActionProvider = (function() {
+      class SimpleActionProvider extends ActionProvider {};
+
+      SimpleActionProvider.properties({
+        providedActions: {
+          calcul: function() {
+            var actions;
+            actions = this.actions || this.constructor.actions;
+            if (typeof actions === "object") {
+              actions = Object.keys(actions).map(function(key) {
+                return actions[key];
+              });
+            }
+            return actions.map((action) => {
+              return new action({
+                target: this
+              });
+            });
+          }
+        }
+      });
+
+      return SimpleActionProvider;
+
+    }).call(this);
+    return SimpleActionProvider;
+  });
+
+  (function(definition) {
+    Parallelio.TiledActionProvider = definition();
+    return Parallelio.TiledActionProvider.definition = definition;
+  })(function(dependencies = {}) {
+    var ActionProvider, Mixable, TiledActionProvider;
+    ActionProvider = dependencies.hasOwnProperty("ActionProvider") ? dependencies.ActionProvider : Parallelio.ActionProvider;
+    Mixable = dependencies.hasOwnProperty("Mixable") ? dependencies.Mixable : Parallelio.Spark.Mixable;
+    TiledActionProvider = (function() {
+      class TiledActionProvider extends ActionProvider {
+        validActionTile(tile) {
+          return tile != null;
+        }
+
+        prepareActionTile(tile) {
+          if (!tile.getPropertyInstance('providedActions')) {
+            return Mixable.Extension.make(ActionProvider.prototype, tile);
+          }
+        }
+
+      };
+
+      TiledActionProvider.properties({
+        tile: {
+          change: function(old, overrided) {
+            overrided(old);
+            return this.forwardedActions;
+          }
+        },
+        actionTiles: {
+          collection: true,
+          calcul: function(invalidator) {
+            var myTile;
+            myTile = invalidator.prop('tile');
+            if (myTile) {
+              return this.actionTilesCoord.map((coord) => {
+                return myTile.getRelativeTile(coord.x, coord.y);
+              }).filter((tile) => {
+                return this.validActionTile(tile);
+              });
+            } else {
+              return [];
+            }
+          }
+        },
+        forwardedActions: {
+          collection: {
+            compare: function(a, b) {
+              return a.action === b.action && a.location === b.location;
+            }
+          },
+          calcul: function(invalidator) {
+            var actionTiles, actions;
+            actionTiles = invalidator.prop('actionTiles');
+            actions = invalidator.prop('providedActions');
+            return actionTiles.reduce((res, tile) => {
+              return res.concat(actions.map(function(act) {
+                return {
+                  action: act,
+                  location: tile
+                };
+              }));
+            }, []);
+          },
+          itemAdded: function(forwarded) {
+            this.prepareActionTile(forwarded.location);
+            return forwarded.location.providedActions.add(forwarded.action);
+          },
+          itemRemoved: function(forwarded) {
+            return forwarded.location.providedActions.remove(forwarded.action);
+          }
+        }
+      });
+
+      TiledActionProvider.prototype.actionTilesCoord = [
+        {
+          x: 0,
+          y: -1
+        },
+        {
+          x: -1,
+          y: 0
+        },
+        {
+          x: 0,
+          y: 0
+        },
+        {
+          x: +1,
+          y: 0
+        },
+        {
+          x: 0,
+          y: +1
+        }
+      ];
+
+      return TiledActionProvider;
+
+    }).call(this);
+    return TiledActionProvider;
+  });
+
 }).call(this);
 
 (function() {
@@ -6130,6 +6369,15 @@
             timing.updater = Updater.instance;
             return timing;
           }
+        },
+        mainUI: {
+          calcul: function() {
+            var div;
+            div = document.createElement("div");
+            div.classList.add("ui");
+            document.body.appendChild(div);
+            return div;
+          }
         }
       });
 
@@ -6141,6 +6389,103 @@
 
     }).call(this);
     return Game;
+  });
+
+  (function(definition) {
+    DOM.PlayerSelectionInfo = definition();
+    return DOM.PlayerSelectionInfo.definition = definition;
+  })(function(dependencies = {}) {
+    var Display, PlayerSelectionInfo, Updater;
+    Display = dependencies.hasOwnProperty("Display") ? dependencies.Display : DOM.Display;
+    Updater = dependencies.hasOwnProperty("Updater") ? dependencies.Updater : DOM.Updater;
+    PlayerSelectionInfo = (function() {
+      class PlayerSelectionInfo extends Display {
+        constructor() {
+          super();
+          this.initDisplay();
+          this.baseCls = 'selectionInfo';
+          this.name;
+          this.game;
+          this.actions;
+        }
+
+        setDefaults() {
+          if (!this.displayContainer && this.game.mainUI) {
+            this.displayContainer = this.game.mainUI;
+          }
+          if (!this.player && this.game.currentPlayer) {
+            return this.player = this.game.currentPlayer;
+          }
+        }
+
+      };
+
+      PlayerSelectionInfo.properties({
+        display: {
+          calcul: function(invalidator, overrided) {
+            var div;
+            div = overrided();
+            div.html('<div class="name"></div><div class="actions"><span class="title">Actions :</span><ul></ul></div>');
+            return div;
+          }
+        },
+        player: {
+          default: null
+        },
+        selection: {
+          calcul: function(invalidator) {
+            return invalidator.propPath("player.selected");
+          }
+        },
+        name: {
+          updater: Updater.instance,
+          active: function(invalidator) {
+            return invalidator.propInitiated('display');
+          },
+          calcul: function(invalidator) {
+            var sel;
+            sel = invalidator.prop("selection");
+            if (sel != null) {
+              return invalidator.prop("name", sel) || sel.constructor.name;
+            }
+          },
+          change: function() {
+            return this.display.find(".name").text(this.name);
+          }
+        },
+        actions: {
+          collection: true,
+          calcul: function(invalidator) {
+            return invalidator.propPath("selection.availableActions") || [];
+          },
+          change: function() {
+            var list;
+            list = this.display.find(".actions ul");
+            list.empty();
+            return this.actions.forEach(function(action) {
+              var display, name;
+              name = action.name || action.constructor.name;
+              display = $('<li>' + name + '</li>');
+              display.on("click", function() {
+                return action.start();
+              });
+              return list.append(display);
+            });
+          }
+        },
+        game: {
+          change: function(old) {
+            if (this.game) {
+              return this.setDefaults();
+            }
+          }
+        }
+      });
+
+      return PlayerSelectionInfo;
+
+    }).call(this);
+    return PlayerSelectionInfo;
   });
 
   (function(definition) {
