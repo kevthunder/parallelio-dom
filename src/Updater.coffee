@@ -1,25 +1,43 @@
-BaseUpdater = require('parallelio').Spark.Updater
+Binder = require('parallelio').Spark.Binder
 
-class Updater extends BaseUpdater
-  constructor: () ->
+class Updater extends Binder
+
+  constructor: (options)->
     super()
+    @requestFrameCallback = => @requestFrame()
     @updateCallback = => @update()
-    @binded = false
+    if options?
+      @loadOptions(options)
 
-  update: ->
-    super()
-    @binded = false
-    if @callbacks.length > 0
-      @requestFrame()
+  loadOptions: (options)->
+    @scope = options.scope
+    @property = options.property
+    @callback = options.callback
+    @autoBind = options.autoBind
 
+  getProperty: ->
+    if typeof @property == "string"
+      @property = @scope.getPropertyInstance(@property)
+    @property
 
+  doBind: ->
+    @update()
+    @getProperty().on 'invalidated', @requestFrameCallback
+    @getProperty().on 'updated', @requestFrameCallback
+
+  doUnbind: ->
+    @getProperty().off 'invalidated', @requestFrameCallback
+    @getProperty().off 'updated', @requestFrameCallback
+    
   requestFrame: () ->
-    if !@binded
+    if !@framebinded
       window.requestAnimationFrame(@updateCallback)
-      @binded = true
+      @framebinded = true
 
-  addCallback: (callback)->
-    super(callback)
-    @requestFrame()
+  update: (old)->
+    value = @getProperty().get()
+    @handleChange(value, old)
+    @framebinded = false
 
-Updater.instance = new Updater()
+  handleChange: (value, old)->
+    @callback.call(@scope, old)

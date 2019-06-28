@@ -6,16 +6,12 @@ class Display extends Element
   @include EventEmitter.prototype
   @properties
     displayContainer:
-      updater: Updater.instance
       default: null
-      change: ->
+      change: new Updater callback: ->
         if @displayContainer?
           @display.appendTo(@displayContainer)
     cls:
-      updater: Updater.instance
-      active: (invalidator)->
-        invalidator.propInitiated('display')
-      change: (old)->
+      change: new Updater callback: (old)->
         if old?
           @display.removeClass(old)
         if @cls?
@@ -28,16 +24,10 @@ class Display extends Element
         display.get(0)._parallelio_obj = this
         display
     displayX:
-      updater: Updater.instance
-      active: (invalidator)->
-        invalidator.propInitiated('display')
-      change: (old)->
+      change: new Updater callback: ->
         @display.css(left: @displayX)
     displayY:
-      updater: Updater.instance
-      active: (invalidator)->
-        invalidator.propInitiated('display')
-      change: (old)->
+      change: new Updater callback: ->
         @display.css(top: @displayY)
 
   initDisplay: ->
