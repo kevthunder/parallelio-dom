@@ -5,6 +5,7 @@ var uglify = require('gulp-uglify-es').default;
 var concat = require('gulp-concat');
 var mocha = require('gulp-mocha');
 var merge = require('merge2');
+var clean = require('gulp-clean');
 var wrapper = require('spark-wrapper');
 var sass = require('gulp-sass');
 var TestServer = require('karma').Server;
@@ -100,8 +101,13 @@ gulp.task('coffeeTest', function() {
     .pipe(gulp.dest('./test/'));
 });
 
+gulp.task('clean', function() {
+  return gulp.src(['./lib','./dist'], {read: false, allowEmpty:true})
+  .pipe(clean());
+});
+
 var build;
-gulp.task('build', build = gulp.series('sass', 'coffee', 'concatCoffee', 'compress', function (done) {
+gulp.task('build', build = gulp.series('clean', 'sass', 'coffee', 'concatCoffee', 'compress', function (done) {
     console.log('Build Complete');
     done();
 }));
@@ -121,10 +127,11 @@ gulp.task('test', gulp.series('build','coffeeTest', function(done) {
   }, done).start();
 }));
 
+// Some version of karma does not exit by itself
 gulp.task('test-exit', gulp.series('test', function(done) {
   console.log('Everithing is done, closing process');
-  process.exit();
   done();
+  process.exit();
 }));
 
 gulp.task('test-debug', gulp.series('build','coffeeTest', function(done) {

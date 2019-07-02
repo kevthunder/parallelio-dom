@@ -1,6 +1,6 @@
 BaseDamageable = require('parallelio').Damageable
 Display = require('./Display')
-Updater = require('./Updater')
+DomUpdater = require('./DomUpdater')
 EventEmitter = require('spark-starter').EventEmitter
 
 class Damageable extends BaseDamageable
@@ -16,12 +16,9 @@ class Damageable extends BaseDamageable
     healthClsSteps:
       default: 10
     healthCls:
-      updater: Updater.instance
-      active: (invalidator)->
-        invalidator.propInitiated('display')
       calcul: (invalidator)->
         'health-'+ (Math.ceil(invalidator.prop('health') / invalidator.prop('maxHealth') * invalidator.prop('healthClsSteps')))
-      change: (old)->
+      change: new DomUpdater callback: (old)->
         if old?
           @display.removeClass(old)
         if @healthCls?

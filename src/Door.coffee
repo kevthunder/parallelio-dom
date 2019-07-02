@@ -1,6 +1,6 @@
 Tiled = require('./Tiled')
 BaseDoor = require('parallelio').Door
-Updater = require('./Updater')
+DomUpdater = require('./DomUpdater')
 Element = require('spark-starter').Element
 
 class Door extends BaseDoor
@@ -13,19 +13,13 @@ class Door extends BaseDoor
 
   @properties
     direction:
-      updater: Updater.instance
-      active: (invalidator)->
-        invalidator.propInitiated('display')
-      change: (old)->
+      change: new DomUpdater callback: (old)->
         if old?
           @display.removeClass(old)
         if @direction?
           @display.addClass(@direction)
     open:
-      updater: Updater.instance
-      active: (invalidator)->
-        invalidator.propInitiated('display')
-      change: (old)->
+      change: new DomUpdater callback: (old)->
         @display.toggleClass('close',!@open)
         @display.toggleClass('open',@open)
         

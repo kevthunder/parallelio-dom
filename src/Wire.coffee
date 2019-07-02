@@ -1,6 +1,6 @@
 Tiled = require('./Tiled')
 BaseWire = require('parallelio').Wire.definition({Tiled:Tiled})
-Updater = require('./Updater')
+DomUpdater = require('./DomUpdater')
 
 
 class Wire extends BaseWire
@@ -14,20 +14,14 @@ class Wire extends BaseWire
       calcul: (invalidator,sup)->
         sup()
     connectedDirections:
-      updater: Updater.instance
-      active: (invalidator)->
-        invalidator.propInitiated('display')
-      change: (old)->
+      change: new DomUpdater callback: (old)->
         if old
           old.forEach (d) =>
             @display.removeClass @getClassFromDirection(d)
         @connectedDirections.forEach (d) =>
           @display.addClass @getClassFromDirection(d)
     wireType:
-      updater: Updater.instance
-      active: (invalidator)->
-        invalidator.propInitiated('display')
-      change: (old)->
+      change: new DomUpdater callback: (old)->
         if old
           @display.removeClass old
         @display.addClass @wireType

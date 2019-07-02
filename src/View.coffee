@@ -1,5 +1,5 @@
 BaseView = require('parallelio').View
-Updater = require('./Updater')
+DomUpdater = require('./DomUpdater')
 Display = require('./Display')
 
 class View extends BaseView
@@ -40,15 +40,12 @@ class View extends BaseView
       calcul: ->
         $('.viewContent', @display)
     boundsStyles:
-      updater: Updater.instance
       calcul: (invalidator)->
         top: invalidator.prop('top',@bounds)*100 + '%'
         left: invalidator.prop('left',@bounds)*100 + '%'
         bottom: (1-invalidator.prop('bottom',@bounds))*100 + '%'
         right: (1-invalidator.prop('right',@bounds))*100 + '%'
-      active: (invalidator)->
-        invalidator.propInitiated('display') and invalidator.prop('bounds')?
-      change: (old)->
+      change: new DomUpdater callback: (old)->
         @display.css(@boundsStyles)
 
   setDefaults: ->

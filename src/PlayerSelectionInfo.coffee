@@ -1,5 +1,5 @@
 Display = require('./Display')
-Updater = require('./Updater')
+DomUpdater = require('./DomUpdater')
 
 class PlayerSelectionInfo extends Display
   constructor: () ->
@@ -22,14 +22,11 @@ class PlayerSelectionInfo extends Display
       calcul: (invalidator)->
         invalidator.propPath("player.selected")
     name:
-      updater: Updater.instance
-      active: (invalidator)->
-        invalidator.propInitiated('display')
       calcul: (invalidator) ->
         sel = invalidator.prop("selection")
         if sel?
           invalidator.prop("name",sel) || sel.constructor.name
-      change: ->
+      change: new DomUpdater callback: (old)->
         @display.find(".name").text(@name)
 
     actions:

@@ -1,6 +1,6 @@
 Tiled = require('./Tiled')
 BaseCharacter = require('parallelio').Character
-Updater = require('./Updater')
+DomUpdater = require('./DomUpdater')
 Element = require('spark-starter').Element
 
 class Character extends BaseCharacter
@@ -12,9 +12,6 @@ class Character extends BaseCharacter
     
   @properties
     selected:
-      updater: Updater.instance
-      active: (invalidator)->
-        invalidator.propInitiated('display')
-      change: (old)->
+      change: new DomUpdater callback: (old)->
         @display.toggleClass('selected',@selected)
     

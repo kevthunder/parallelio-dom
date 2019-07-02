@@ -21,6 +21,7 @@ class Tile extends BaseTile
           invalidator.prop('display',container)
     displayX:
       calcul: (invalidator) ->
+        debugger
         @tileToDisplayX(invalidator.prop('x'))
     displayY:
       calcul: (invalidator) ->

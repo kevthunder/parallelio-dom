@@ -2,7 +2,7 @@ Tiled = require('./Tiled')
 Projectile = require('./Projectile')
 Damageable = require('./Damageable')
 BaseWeapon = require('parallelio').Weapon.definition({Tiled:Tiled,Damageable:Damageable,Projectile:Projectile})
-Updater = require('./Updater')
+DomUpdater = require('./DomUpdater')
 
 class Weapon extends BaseWeapon
   constructor: (direction) ->
@@ -11,10 +11,7 @@ class Weapon extends BaseWeapon
 
   @properties
     direction:
-      updater: Updater.instance
-      active: (invalidator)->
-        invalidator.propInitiated('display')
-      change: (old)->
+      change: new DomUpdater callback: (old)->
         if old?
           @display.removeClass(old.name)
         if @direction.name?

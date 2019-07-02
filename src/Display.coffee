@@ -1,5 +1,5 @@
 Element = require('parallelio').Element
-Updater = require('./Updater')
+DomUpdater = require('./DomUpdater')
 EventEmitter = require('spark-starter').EventEmitter
 
 class Display extends Element
@@ -7,11 +7,11 @@ class Display extends Element
   @properties
     displayContainer:
       default: null
-      change: new Updater callback: ->
+      change: new DomUpdater callback: ->
         if @displayContainer?
           @display.appendTo(@displayContainer)
     cls:
-      change: new Updater callback: (old)->
+      change: new DomUpdater callback: (old)->
         if old?
           @display.removeClass(old)
         if @cls?
@@ -24,17 +24,13 @@ class Display extends Element
         display.get(0)._parallelio_obj = this
         display
     displayX:
-      change: new Updater callback: ->
+      change: new DomUpdater callback: ->
         @display.css(left: @displayX)
     displayY:
-      change: new Updater callback: ->
+      change: new DomUpdater callback: ->
         @display.css(top: @displayY)
 
   initDisplay: ->
-    @cls
-    @displayX
-    @displayY
-    @displayContainer
 
   destroyDisplay: ->
     if @_display?
