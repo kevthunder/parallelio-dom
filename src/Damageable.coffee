@@ -3,7 +3,7 @@ Display = require('./Display')
 DomUpdater = require('./DomUpdater')
 EventEmitter = require('spark-starter').EventEmitter
 
-class Damageable extends BaseDamageable
+module.exports = class Damageable extends BaseDamageable
   @extend Display
   @include EventEmitter.prototype
   

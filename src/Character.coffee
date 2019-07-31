@@ -3,8 +3,8 @@ BaseCharacter = require('parallelio').Character
 DomUpdater = require('./DomUpdater')
 Element = require('spark-starter').Element
 
-class Character extends BaseCharacter
-  @extend Tiled.definition({BaseTiled:Element})
+module.exports = class Character extends BaseCharacter
+  @extend Tiled
   constructor: () ->
     super()
     @initDisplay()

@@ -1,11 +1,11 @@
 assert = chai.assert;
-Ship = Parallelio.DOM.Ship
+ShipInterior = Parallelio.DOM.ShipInterior
 
-describe 'Ship', ->
+describe 'ShipInterior', ->
   it 'create a div', (done)->
     container = document.createElement("div");
     document.body.appendChild(container)
-    ship = (new Ship()).tap ->
+    ship = (new ShipInterior()).tap ->
       @displayContainer = container
     
     window.requestAnimationFrame ->
@@ -15,7 +15,7 @@ describe 'Ship', ->
   it 'generate tiles', (done)->
     container = document.createElement("div");
     document.body.appendChild(container)
-    ship = (new Ship()).tap ->
+    ship = (new ShipInterior()).tap ->
       @displayContainer = container
     ship.generate()
 

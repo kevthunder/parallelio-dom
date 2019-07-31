@@ -1,10 +1,13 @@
 Tiled = require('./Tiled')
 Projectile = require('./Projectile')
 Damageable = require('./Damageable')
-BaseWeapon = require('parallelio').Weapon.definition({Tiled:Tiled,Damageable:Damageable,Projectile:Projectile})
+BaseWeapon = require('parallelio').ShipWeapon
 DomUpdater = require('./DomUpdater')
 
-class Weapon extends BaseWeapon
+module.exports = class ShipWeapon extends BaseWeapon
+  @extend Tiled
+  @extend Damageable
+
   constructor: (direction) ->
     super(direction)
     @baseCls = 'weapon'

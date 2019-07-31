@@ -2,7 +2,7 @@ BaseProjectile = require('parallelio').Projectile
 Display = require('./Display')
 Updater = require('./Updater')
 
-class Projectile extends BaseProjectile
+module.exports = class Projectile extends BaseProjectile
   @extend Display
   init: ->
     super()

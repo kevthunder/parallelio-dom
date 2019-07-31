@@ -1,10 +1,10 @@
 Tile = require('./Tile')
-TileContainer = require('parallelio').TileContainer
+TileContainer = require('parallelio').tiles.TileContainer
 DefaultGenerator = require('parallelio').RoomGenerator
 Door = require('./AutomaticDoor')
 EventEmitter = require('spark-starter').EventEmitter
 
-class Ship extends TileContainer
+module.exports = class ShipInterior extends TileContainer
   @include EventEmitter.prototype
   init: ->
     super()
@@ -42,11 +42,11 @@ class Ship extends TileContainer
       @game.mainTileContainer = this
       
   generate: (generator)->
-    generator = generator || (new Ship.Generator()).tap ->
+    generator = generator || (new ShipInterior.Generator()).tap ->
     generator.getTiles().forEach (tile)=>
       @addTile(tile)
 
-class Ship.Generator extends DefaultGenerator
+class ShipInterior.Generator extends DefaultGenerator
   wallFactory: (opt) ->
     (new Tile(opt.x,opt.y)).tap ->
       @cls = 'wall'

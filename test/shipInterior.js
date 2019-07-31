@@ -1,16 +1,16 @@
 (function() {
-  var Ship, assert;
+  var ShipInterior, assert;
 
   assert = chai.assert;
 
-  Ship = Parallelio.DOM.Ship;
+  ShipInterior = Parallelio.DOM.ShipInterior;
 
-  describe('Ship', function() {
+  describe('ShipInterior', function() {
     it('create a div', function(done) {
       var container, ship;
       container = document.createElement("div");
       document.body.appendChild(container);
-      ship = (new Ship()).tap(function() {
+      ship = (new ShipInterior()).tap(function() {
         return this.displayContainer = container;
       });
       return window.requestAnimationFrame(function() {
@@ -22,7 +22,7 @@
       var container, ship;
       container = document.createElement("div");
       document.body.appendChild(container);
-      ship = (new Ship()).tap(function() {
+      ship = (new ShipInterior()).tap(function() {
         return this.displayContainer = container;
       });
       ship.generate();

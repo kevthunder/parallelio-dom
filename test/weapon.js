@@ -1,15 +1,15 @@
 (function() {
-  var Tile, Timing, Weapon, assert;
+  var ShipWeapon, Tile, Timing, assert;
 
   assert = chai.assert;
 
   Tile = Parallelio.DOM.Tile;
 
-  Weapon = Parallelio.DOM.Weapon;
+  ShipWeapon = Parallelio.DOM.ShipWeapon;
 
   Timing = Parallelio.Timing;
 
-  describe('Weapon', function() {
+  describe('ShipWeapon', function() {
     it('create a div', function(done) {
       var container, tile;
       container = document.createElement("div");
@@ -17,7 +17,7 @@
       tile = (new Tile()).tap(function() {
         return this.displayContainer = container;
       });
-      tile.addChild(new Weapon());
+      tile.addChild(new ShipWeapon());
       return window.requestAnimationFrame(function() {
         assert.isNotNull(container.querySelector('.tile'));
         assert.isNotNull(container.querySelector('.weapon'));
@@ -35,7 +35,7 @@
       tile2 = (new Tile(2, 2)).tap(function() {
         return this.displayContainer = container;
       });
-      weapon = new Weapon({
+      weapon = new ShipWeapon({
         autoFire: false,
         target: tile2,
         timing: timing

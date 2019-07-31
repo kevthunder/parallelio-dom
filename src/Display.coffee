@@ -2,7 +2,7 @@ Element = require('parallelio').Element
 DomUpdater = require('./DomUpdater')
 EventEmitter = require('spark-starter').EventEmitter
 
-class Display extends Element
+module.exports = class Display extends Element
   @include EventEmitter.prototype
   @properties
     displayContainer:

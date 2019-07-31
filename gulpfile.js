@@ -2,79 +2,45 @@ var gulp = require('gulp');
 var rename = require("gulp-rename");
 var coffee = require('gulp-coffee');
 var uglify = require('gulp-uglify-es').default;
-var concat = require('gulp-concat');
-var mocha = require('gulp-mocha');
 var merge = require('merge2');
 var clean = require('gulp-clean');
-var wrapper = require('spark-wrapper');
 var sass = require('gulp-sass');
 var TestServer = require('karma').Server;
 var run = require('run-sequence');
-var autoCommit = require('spark-auto-commit');
+var requireIndex = require('gulp-require-index');
+var source = require('vinyl-source-stream');
+var browserify = require('browserify');
+var sourcemaps = require('gulp-sourcemaps');
 
 gulp.task('coffee', function() {
   return gulp.src(['./src/*.coffee'])
+    .pipe(sourcemaps.init())
     .pipe(coffee({bare: true}))
-    .pipe(wrapper({namespace:'Parallelio.DOM'}))
-    .pipe(wrapper.loader({namespace:'Parallelio.DOM','filename':'parallelio-dom'}))
+    .pipe(sourcemaps.write('./maps', {sourceRoot: '../src'}))
     .pipe(gulp.dest('./lib/'));
 });
 
+gulp.task('buildIndex', function () {
+  return gulp.src(['./lib/**/*.js','!./lib/libs.js','!./lib/parallelio-dom.js'])
+    .pipe(requireIndex({name:'libs.js'}))
+    .pipe(gulp.dest('./lib'));
+});
+
 gulp.task('concat', function() {
-  return gulp.src([
-      './src/*.coffee'
-    ])
-    .pipe(wrapper.compose({
-      namespace: 'Parallelio.DOM',
-      aliases: {
-        'parallelio': 'Parallelio',
-        'spark-starter': 'Parallelio.Spark'
-      }
-    }))
-    .pipe(concat('parallelio-dom.coffee'))
-    .pipe(gulp.dest('./tmp/'));
+  var b = browserify({
+    entries: ['./lib/parallelio-dom.js'],
+    debug: true,
+    standalone: 'Parallelio'
+  })
+  return b.bundle()
+    .pipe(source('parallelio-dom.js'))
+    .pipe(gulp.dest('./dist/'));
 });
 
-gulp.task('concatCoffee', gulp.series('concat', function() {
-  return gulp.src(['./tmp/parallelio-dom.coffee'])
-    .pipe(coffee())
-    .pipe(gulp.dest('./dist/'));
-}));
-
-gulp.task('domPart', function() {
-  return gulp.src([
-      './src/*.coffee'
-    ])
-    .pipe(wrapper.compose({
-      namespace: 'Parallelio.DOM',
-      aliases: {
-        'parallelio': 'Parallelio',
-        'spark-starter': 'Parallelio.Spark'
-      },
-      partOf: 'Parallelio'
-    }))
-    .pipe(concat('dom-part.coffee'))
-    .pipe(gulp.dest('./tmp/'));
-});
-
-gulp.task('domPartCoffee', gulp.series('domPart', function() {
-  return gulp.src(['./tmp/dom-part.coffee'])
-    .pipe(coffee())
-    .pipe(gulp.dest('./tmp/'));
-}));
-
-gulp.task('full', gulp.series('concatCoffee','domPartCoffee', function () {
-  return gulp.src([require.resolve('parallelio/dist/parallelio.js'),'./tmp/dom-part.js'])
-    .pipe(concat('parallelio-and-dom.js'))
-    .pipe(gulp.dest('./dist/'));
-}));
-
-gulp.task('compress', gulp.series('full', function () {
-  return gulp.src(['./dist/parallelio-dom.js','./dist/parallelio-and-dom.js'])
-    .pipe(uglify())
-    .pipe(rename({
-          suffix: '.min',
-        }))
+gulp.task('compress', gulp.series('concat', function () {
+  return gulp.src('./dist/parallelio-dom.js')
+    .pipe(uglify({keep_classnames:true}))
+    .pipe(rename('parallelio-dom.min.js'))
     .pipe(gulp.dest('./dist/'));
 }));
 
@@ -82,7 +48,7 @@ gulp.task('watchCoffee', function() {
   return gulp.watch([
     './src/**/*.coffee',
     require.resolve('parallelio/dist/parallelio.js')
-  ], gulp.series('coffee', 'concatCoffee', 'compress'));
+  ], gulp.series('buildJS'));
 });
 
 gulp.task('sass', function () {
@@ -106,19 +72,15 @@ gulp.task('clean', function() {
   .pipe(clean());
 });
 
+gulp.task('buildJS', build = gulp.series('coffee', 'buildIndex', 'concat', 'compress'));
+
 var build;
-gulp.task('build', build = gulp.series('clean', 'sass', 'coffee', 'concatCoffee', 'compress', function (done) {
+gulp.task('build', build = gulp.series('clean', 'sass', 'buildJS', function (done) {
     console.log('Build Complete');
     done();
 }));
 
 gulp.task('watch', gulp.parallel('build','watchSass','watchCoffee'));
-
-gulp.task('update', function() {
-  return autoCommit.afterModuleUpdate(function(cb){
-    return run('test',cb);
-  });
-});
 
 gulp.task('test', gulp.series('build','coffeeTest', function(done) {
   new TestServer({

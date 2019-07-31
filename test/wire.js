@@ -7,14 +7,20 @@
 
   Wire = Parallelio.DOM.Wire;
 
-  TileContainer = Parallelio.TileContainer;
+  TileContainer = Parallelio.tiles.TileContainer;
 
   Display = Parallelio.DOM.Display;
 
   createWireStage = function() {
     var Container;
-    Container = TileContainer.definition();
-    Container.extend(Display);
+    Container = (function() {
+      class Container extends TileContainer {};
+
+      Container.extend(Display);
+
+      return Container;
+
+    }).call(this);
     return (new Container).tap(function() {
       var b, container, m, n, r;
       container = document.createElement("div");

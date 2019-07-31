@@ -1,7 +1,7 @@
 Display = require('./Display')
 DomUpdater = require('./DomUpdater')
 
-class PlayerSelectionInfo extends Display
+module.exports = class PlayerSelectionInfo extends Display
   constructor: () ->
     super()
     @initDisplay()

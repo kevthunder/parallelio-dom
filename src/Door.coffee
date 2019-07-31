@@ -3,13 +3,13 @@ BaseDoor = require('parallelio').Door
 DomUpdater = require('./DomUpdater')
 Element = require('spark-starter').Element
 
-class Door extends BaseDoor
-  @extend Tiled.definition({BaseTiled:Element})
+module.exports = class Door extends BaseDoor
+  @extend Tiled
   constructor: (direction) ->
     super(direction)
+    @baseCls = 'door'
     @initDisplay()
     @open
-    @baseCls = 'door'
 
   @properties
     direction:

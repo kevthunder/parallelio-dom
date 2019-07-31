@@ -1,8 +1,8 @@
-BaseTiled = require('parallelio').Tiled
+BaseTiled = require('parallelio').tiles.Tiled
 Display = require('./Display')
 EventEmitter = require('spark-starter').EventEmitter
 
-class Tiled extends BaseTiled
+module.exports = class Tiled extends BaseTiled
   @extend Display
   @include EventEmitter.prototype
   

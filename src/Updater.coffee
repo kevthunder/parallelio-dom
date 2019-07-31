@@ -1,6 +1,6 @@
 BaseUpdater = require('parallelio').Spark.Updater
 
-class Updater extends BaseUpdater
+module.exports = class Updater extends BaseUpdater
   constructor: () ->
     super()
     @updateCallback = => @update()

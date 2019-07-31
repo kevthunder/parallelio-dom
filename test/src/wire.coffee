@@ -1,12 +1,13 @@
 assert = chai.assert;
 Tile = Parallelio.DOM.Tile
 Wire = Parallelio.DOM.Wire
-TileContainer = Parallelio.TileContainer
+TileContainer = Parallelio.tiles.TileContainer
 Display = Parallelio.DOM.Display
 
 createWireStage = ->
-  Container = TileContainer.definition()
-  Container.extend(Display)
+  class Container extends TileContainer
+    @extend(Display)
+
   (new Container).tap ->
       container = document.createElement("div");
       document.body.appendChild(container)

@@ -2,7 +2,7 @@ BaseView = require('parallelio').View
 DomUpdater = require('./DomUpdater')
 Display = require('./Display')
 
-class View extends BaseView
+module.exports = class View extends BaseView
   @extend Display
   constructor: (display = null) ->
     super()

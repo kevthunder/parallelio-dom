@@ -1,15 +1,15 @@
 assert = chai.assert;
 Tile = Parallelio.DOM.Tile
-Weapon = Parallelio.DOM.Weapon
+ShipWeapon = Parallelio.DOM.ShipWeapon
 Timing = Parallelio.Timing
 
-describe 'Weapon', ->
+describe 'ShipWeapon', ->
   it 'create a div', (done)->
     container = document.createElement("div");
     document.body.appendChild(container)
     tile = (new Tile()).tap ->
       @displayContainer = container
-    tile.addChild new Weapon()
+    tile.addChild new ShipWeapon()
     window.requestAnimationFrame ->
       assert.isNotNull container.querySelector('.tile')
       assert.isNotNull container.querySelector('.weapon')
@@ -24,7 +24,7 @@ describe 'Weapon', ->
     tile2 = (new Tile(2,2)).tap ->
       @displayContainer = container
 
-    weapon = new Weapon({
+    weapon = new ShipWeapon({
       autoFire: false,
       target: tile2,
       timing: timing

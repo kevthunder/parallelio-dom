@@ -1,9 +1,10 @@
 Tiled = require('./Tiled')
-BaseWire = require('parallelio').Wire.definition({Tiled:Tiled})
+BaseWire = require('parallelio').wiring.Wire
 DomUpdater = require('./DomUpdater')
 
 
-class Wire extends BaseWire
+module.exports = class Wire extends BaseWire
+  @extend Tiled
   constructor: (wireType) ->
     super(wireType)
     @baseCls = 'wire'

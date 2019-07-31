@@ -1,8 +1,8 @@
-BaseTile = require('parallelio').Tile
+BaseTile = require('parallelio').tiles.Tile
 BaseFloor = require('parallelio').Floor
 Display = require('./Display')
 
-class Tile extends BaseTile
+module.exports = class Tile extends BaseTile
   @extend Display
   @size: 20
   init: ->
@@ -31,7 +31,9 @@ class Tile extends BaseTile
   tileToDisplayY: (y) ->
     y*Tile.size
 
-class Tile.Floor extends BaseFloor.definition({Tile:Tile})
+class Tile.Floor extends BaseFloor
+  @extend Tile
   init: ->
     super()
+    @baseCls = 'tile'
     @cls = 'floor'

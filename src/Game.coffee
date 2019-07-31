@@ -3,7 +3,7 @@ View = require('./View')
 PlayerController = require('./PlayerController')
 # Updater = require('./Updater')
 
-class Game extends BaseGame
+module.exports = class Game extends BaseGame
   @properties
     timing:
       calcul: (invalidator,original)->
