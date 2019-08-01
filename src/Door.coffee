@@ -5,11 +5,11 @@ Element = require('spark-starter').Element
 
 module.exports = class Door extends BaseDoor
   @extend Tiled
-  constructor: (direction) ->
-    super(direction)
+    
+  init: ->
     @baseCls = 'door'
+    super()
     @initDisplay()
-    @open
 
   @properties
     direction:

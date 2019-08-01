@@ -19,3 +19,5 @@ module.exports = class ShipWeapon extends BaseWeapon
           @display.removeClass(old.name)
         if @direction.name?
           @display.addClass(@direction.name)
+    projectileClass:
+      default: Projectile
