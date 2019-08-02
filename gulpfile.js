@@ -80,7 +80,9 @@ gulp.task('build', build = gulp.series('clean', 'sass', 'buildJS', function (don
     done();
 }));
 
-gulp.task('watch', gulp.parallel('build','watchSass','watchCoffee'));
+gulp.task('watch', gulp.parallel('watchSass', 'watchCoffee'));
+
+gulp.task('dev', gulp.series('build', 'watch'));
 
 gulp.task('test', gulp.series('build','coffeeTest', function(done) {
   new TestServer({
