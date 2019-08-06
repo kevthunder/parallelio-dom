@@ -1,0 +1,33 @@
+@import 'variables'
+@import 'mixins/icon'
+
+$shipsize: 16px
+
+@-moz-keyframes spin
+  100%
+    -moz-transform: rotate(-360deg)
+
+@-webkit-keyframes spin
+  100%
+    -webkit-transform: rotate(-360deg)
+
+@keyframes spin
+  100%
+    -webkit-transform: rotate(-360deg)
+    transform: rotate(-360deg)
+  
+.ship
+  position: absolute
+  width: 10px
+  height: 10px
+  margin: -5px 0 0 -5px
+  &:before
+    position: absolute
+    @include fa-icon($fa-var-space-shuttle)
+  &.orbiting
+    -webkit-animation: spin 10s linear infinite
+    -moz-animation: spin 10s linear infinite
+    animation: spin 10s linear infinite
+    &::before
+      top: 5px
+      left: -5px

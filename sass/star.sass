@@ -1,0 +1,14 @@
+@import 'variables'
+@import 'mixins/icon'
+
+$starsize: 16px
+
+.star
+  font-size: $starsize
+  width: $starsize
+  margin-top: $starsize/-2
+  margin-left: $starsize/-2 
+  position: absolute
+  text-align: center
+  &:before
+    @include fa-icon($fa-var-star)

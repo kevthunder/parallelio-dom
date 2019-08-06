@@ -41,10 +41,10 @@ module.exports = class View extends BaseView
         $('.viewContent', @display)
     boundsStyles:
       calcul: (invalidator)->
-        top: invalidator.prop('top',@bounds)*100 + '%'
-        left: invalidator.prop('left',@bounds)*100 + '%'
-        bottom: (1-invalidator.prop('bottom',@bounds))*100 + '%'
-        right: (1-invalidator.prop('right',@bounds))*100 + '%'
+        top: invalidator.propPath('bounds.top')*100 + '%'
+        left: invalidator.propPath('bounds.left')*100 + '%'
+        bottom: (1-invalidator.propPath('bounds.bottom'))*100 + '%'
+        right: (1-invalidator.propPath('bounds.right'))*100 + '%'
       change: new DomUpdater callback: (old)->
         @display.css(@boundsStyles)
 

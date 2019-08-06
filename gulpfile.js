@@ -11,6 +11,8 @@ var requireIndex = require('gulp-require-index');
 var source = require('vinyl-source-stream');
 var browserify = require('browserify');
 var sourcemaps = require('gulp-sourcemaps');
+var linkInfo = require('npm-link-info');
+var childProcess = require('child_process');
 
 gulp.task('coffee', function() {
   return gulp.src(['./src/*.coffee'])
@@ -80,7 +82,16 @@ gulp.task('build', build = gulp.series('clean', 'sass', 'buildJS', function (don
     done();
 }));
 
-gulp.task('watch', gulp.parallel('watchSass', 'watchCoffee'));
+gulp.task('watchLinked', function(done){
+  if(linkInfo.isLinked('parallelio')){
+    childProcess.spawn('npx', ['gulp','watch'], { cwd: linkInfo.baseFolder('parallelio'), stdio: 'inherit' })
+      .on('close', done);
+  }else{
+    done()
+  }
+});
+
+gulp.task('watch', gulp.parallel('watchSass', 'watchCoffee', 'watchLinked'));
 
 gulp.task('dev', gulp.series('build', 'watch'));
 

@@ -32,15 +32,15 @@ module.exports = class PlayerSelectionInfo extends Display
     actions:
       collection: true 
       calcul: (invalidator)->
-        invalidator.propPath("selection.availableActions") || []
+        invalidator.propPath("player.availableActions") || []
       change: ->
         list = @display.find(".actions ul")
         list.empty()
-        @actions.forEach (action)->
+        @actions.forEach (action) =>
           name = action.name || action.constructor.name
           display = $('<li>'+name+'</li>')
-          display.on "click", ->
-            action.start()
+          display.on "click", =>
+            @player.selectAction(action)
           list.append(display)
 
 

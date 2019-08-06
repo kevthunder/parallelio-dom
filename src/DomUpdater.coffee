@@ -25,4 +25,4 @@ module.exports = class DomUpdater extends PropertyWatcher
     if value != @old
       @old = value
       @handleChange(value, old)
-      @framebinded = false
+    @framebinded = false
