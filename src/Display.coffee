@@ -1,9 +1,7 @@
 Element = require('parallelio').Element
 DomUpdater = require('./DomUpdater')
-EventEmitter = require('spark-starter').EventEmitter
 
 module.exports = class Display extends Element
-  @include EventEmitter.prototype
   @properties
     displayContainer:
       default: null
@@ -33,6 +31,6 @@ module.exports = class Display extends Element
   initDisplay: ->
 
   destroyDisplay: ->
-    if @_display?
+    if this.displayProperty.value?
       @display.remove()
     

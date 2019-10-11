@@ -2,10 +2,8 @@ Tile = require('./Tile')
 TileContainer = require('parallelio').tiles.TileContainer
 DefaultGenerator = require('parallelio').RoomGenerator
 Door = require('./AutomaticDoor')
-EventEmitter = require('spark-starter').EventEmitter
 
 module.exports = class ShipInterior extends TileContainer
-  @include EventEmitter.prototype
   init: ->
     super()
     @displayContainer
@@ -14,7 +12,7 @@ module.exports = class ShipInterior extends TileContainer
     container: {}
     displayContainer:
       calcul: (invalidator) ->
-        container = invalidator.prop('container')
+        container = invalidator.propByName('container')
         if container?.getProperty('contentDisplay')
           container.contentDisplay
         else if container?.getProperty('display')
@@ -29,7 +27,7 @@ module.exports = class ShipInterior extends TileContainer
         display.get(0)._parallelio_obj = this
         display
     game:
-      change: (old)->
+      change: (val, old)->
         if @game 
           @setDefaults()
 

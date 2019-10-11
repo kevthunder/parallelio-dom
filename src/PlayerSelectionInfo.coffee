@@ -46,7 +46,7 @@ module.exports = class PlayerSelectionInfo extends Display
 
 
     game:
-      change: (old)->
+      change: (val, old)->
         if @game 
           @setDefaults()
 

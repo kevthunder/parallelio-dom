@@ -14,17 +14,17 @@ module.exports = class Tile extends BaseTile
     container: {}
     displayContainer:
       calcul: (invalidator) ->
-        container = invalidator.prop('container')
+        container = invalidator.propByName('container')
         if container?.getProperty('tileDisplay')
-          invalidator.prop('tileDisplay',container)
+          invalidator.propByName('tileDisplay',container)
         else if container?.getProperty('display')
-          invalidator.prop('display',container)
+          invalidator.propByName('display',container)
     displayX:
       calcul: (invalidator) ->
-        @tileToDisplayX(invalidator.prop('x'))
+        @tileToDisplayX(invalidator.propByName('x'))
     displayY:
       calcul: (invalidator) ->
-        @tileToDisplayY(invalidator.prop('y'))
+        @tileToDisplayY(invalidator.propByName('y'))
   tileToDisplayX: (x) ->
     x*Tile.size
   tileToDisplayY: (y) ->

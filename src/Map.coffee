@@ -10,7 +10,7 @@ module.exports = class Map extends BaseMap
         if @displayContainer?
           @displayContainer.append(@backgroundCanvas)
     game:
-      change: (old)->
+      change: (val, old)->
         if @game 
           @setDefaults()
     starMargin:

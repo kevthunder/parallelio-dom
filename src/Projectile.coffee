@@ -11,19 +11,19 @@ module.exports = class Projectile extends BaseProjectile
   @properties
     displayContainer:
       calcul: (invalidator) ->
-        container = invalidator.prop('container')
+        container = invalidator.propByName('container')
         if container?.getProperty('tileDisplay')
-          invalidator.prop('tileDisplay',container)
+          invalidator.propByName('tileDisplay',container)
         else if container?.getProperty('display')
-          invalidator.prop('display',container)
+          invalidator.propByName('display',container)
         else 
-          invalidator.prop('originTile').displayContainer
+          invalidator.propByName('originTile').displayContainer
     displayX:
       calcul: (invalidate)->
-        @originTile.tileToDisplayX invalidate.prop('x')
+        @originTile.tileToDisplayX invalidate.propByName('x')
     displayY:
       calcul: (invalidate)->
-        @originTile.tileToDisplayY invalidate.prop('y')
+        @originTile.tileToDisplayY invalidate.propByName('y')
     moving:
       change: ()->
         if @moving

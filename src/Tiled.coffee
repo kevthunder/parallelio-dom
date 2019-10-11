@@ -1,10 +1,8 @@
 BaseTiled = require('parallelio').tiles.Tiled
 Display = require('./Display')
-EventEmitter = require('spark-starter').EventEmitter
 
 module.exports = class Tiled extends BaseTiled
   @extend Display
-  @include EventEmitter.prototype
   
   constructor: () ->
     super()
@@ -13,16 +11,16 @@ module.exports = class Tiled extends BaseTiled
   @properties
     displayContainer:
       calcul: (invalidator) ->
-        tile = invalidator.prop('tile')
+        tile = invalidator.propByName('tile')
         if tile?
-          invalidator.prop('displayContainer',tile)
+          invalidator.propByName('displayContainer',tile)
     displayX:
       calcul: (invalidator) ->
-        tile = invalidator.prop('tile')
+        tile = invalidator.propByName('tile')
         if tile?
-          tile.displayX + tile.tileToDisplayX(invalidator.prop('offsetX'))
+          tile.displayX + tile.tileToDisplayX(invalidator.propByName('offsetX'))
     displayY:
       calcul: (invalidator) ->
-        tile = invalidator.prop('tile')
+        tile = invalidator.propByName('tile')
         if tile?
-          tile.displayY + tile.tileToDisplayY(invalidator.prop('offsetY'))
+          tile.displayY + tile.tileToDisplayY(invalidator.propByName('offsetY'))

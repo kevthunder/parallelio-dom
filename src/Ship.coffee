@@ -17,7 +17,7 @@ module.exports = class Ship extends BaseShip
         invalidator.propPath('location.y')
     orbiting:
       calcul: (invalidator) ->
-        invalidator.prop('travel') == null
+        invalidator.propByName('travel') == null
       change: new DomUpdater callback: (old)->
         if @orbiting
           @display.addClass("orbiting")

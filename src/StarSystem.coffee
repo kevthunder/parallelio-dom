@@ -8,10 +8,10 @@ module.exports = class StarSystem extends BaseStarSystem
   @properties
     displayX:
       calcul: (invalidator) ->
-        invalidator.prop('x')
+        invalidator.propByName('x')
     displayY:
       calcul: (invalidator) ->
-        invalidator.prop('y')
+        invalidator.propByName('y')
 
   init: ->
     @baseCls = 'star'

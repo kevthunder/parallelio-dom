@@ -1,4 +1,4 @@
-PropertyWatcher = require('parallelio').Spark.Invalidated.PropertyWatcher
+PropertyWatcher = require('parallelio').Spark.watchers.PropertyWatcher
 
 module.exports = class DomUpdater extends PropertyWatcher
 
