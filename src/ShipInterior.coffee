@@ -13,9 +13,9 @@ module.exports = class ShipInterior extends TileContainer
     displayContainer:
       calcul: (invalidator) ->
         container = invalidator.propByName('container')
-        if container?.getProperty('contentDisplay')
+        if container?.propertiesManager.getProperty('contentDisplay')
           container.contentDisplay
-        else if container?.getProperty('display')
+        else if container?.propertiesManager.getProperty('display')
           container.display
       change: ->
         if @displayContainer?

@@ -11,9 +11,6 @@ module.exports = class Wire extends BaseWire
     @connectedDirections
 
   @properties
-    display:
-      calcul: (invalidator,sup)->
-        sup()
     connectedDirections:
       change: new DomUpdater callback: (old)->
         if old
