@@ -15,7 +15,7 @@ describe 'ShipWeapon', ->
       assert.isNotNull container.querySelector('.weapon')
       done()
   it 'fire a projectile', (done)->
-    timing = new Timing(false)
+    timing = new Timing(running: false)
     container = document.createElement("div");
     document.body.appendChild(container)
 

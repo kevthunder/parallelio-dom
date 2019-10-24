@@ -26,7 +26,9 @@
     });
     return it('fire a projectile', function(done) {
       var container, tile, tile2, timing, weapon;
-      timing = new Timing(false);
+      timing = new Timing({
+        running: false
+      });
       container = document.createElement("div");
       document.body.appendChild(container);
       tile = (new Tile(1, 1)).tap(function() {

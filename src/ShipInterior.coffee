@@ -53,4 +53,4 @@ class ShipInterior.Generator extends DefaultGenerator
     (new Tile.Floor(opt.x,opt.y))
   doorFactory: (opt) ->
     (new Tile.Floor(opt.x,opt.y)).tap ->
-      @addChild new Door(opt.direction)
+      @addChild new Door(direction: opt.direction)
