@@ -14,6 +14,9 @@ module.exports = class DomUpdater extends PropertyWatcher
       @framebinded = true
       window.requestAnimationFrame(@updateDomCallback)
 
+  validContext: ->
+    true
+    
   invalidate: ->
     @requestFrame()
 

@@ -1,9 +1,6 @@
 Element = require('spark-starter').Element
 
 module.exports = class PlayerController extends Element
-  constructor: (options) ->
-    super()
-    @setProperties(options)
   @properties
     player:
       change: ->
