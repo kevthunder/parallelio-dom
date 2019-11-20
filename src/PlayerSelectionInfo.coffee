@@ -23,9 +23,9 @@ module.exports = class PlayerSelectionInfo extends Display
         invalidator.propPath("player.selected")
     name:
       calcul: (invalidator) ->
-        sel = invalidator.prop("selection")
+        sel = invalidator.prop(this.selectionProperty)
         if sel?
-          invalidator.prop("name",sel) || sel.constructor.name
+          invalidator.prop(sel.nameProperty) || sel.constructor.name
       change: new DomUpdater callback: (old)->
         @display.find(".name").text(@name)
 
@@ -33,7 +33,7 @@ module.exports = class PlayerSelectionInfo extends Display
       collection: true 
       calcul: (invalidator)->
         invalidator.propPath("player.availableActions") || []
-      change: ->
+      change: new DomUpdater callback: (old)->
         list = @display.find(".actions ul")
         list.empty()
         @actions.forEach (action) =>
