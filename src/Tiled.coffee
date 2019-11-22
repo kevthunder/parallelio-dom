@@ -1,8 +1,7 @@
 BaseTiled = require('parallelio').tiles.Tiled
 Display = require('./Display')
 
-module.exports = class Tiled extends BaseTiled
-  @extend Display
+module.exports = class Tiled extends Display
   
   constructor: () ->
     super()
