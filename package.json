@@ -43,6 +43,6 @@
     "vinyl-source-stream": "^2.0.0"
   },
   "dependencies": {
-    "parallelio": "github:kevthunder/parallelio#use-spark-properties"
+    "parallelio": "github:kevthunder/parallelio"
   }
 }

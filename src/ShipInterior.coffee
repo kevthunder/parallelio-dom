@@ -1,6 +1,6 @@
 Tile = require('./Tile')
 TileContainer = require('parallelio').tiles.TileContainer
-DefaultGenerator = require('parallelio').RoomGenerator
+DefaultGenerator = require('parallelio').generators.RoomGenerator
 Door = require('./AutomaticDoor')
 
 module.exports = class ShipInterior extends TileContainer

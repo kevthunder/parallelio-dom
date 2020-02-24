@@ -1,5 +1,5 @@
 
-BaseStarMapGenerator = require('parallelio').StarMapGenerator
+BaseStarMapGenerator = require('parallelio').generators.StarMapGenerator
 Map = require('./Map')
 StarSystem = require('./StarSystem')
 
