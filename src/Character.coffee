@@ -5,10 +5,11 @@ Element = require('spark-starter').Element
 
 module.exports = class Character extends BaseCharacter
   @extend Tiled
-  constructor: () ->
+
+  init: ->
+    @baseCls = 'character'
     super()
     @initDisplay()
-    @baseCls = 'character'
     
   @properties
     selected:

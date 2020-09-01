@@ -12,7 +12,6 @@ var source = require('vinyl-source-stream');
 var browserify = require('browserify');
 var sourcemaps = require('gulp-sourcemaps');
 var linkInfo = require('npm-link-info');
-var childProcess = require('child_process');
 
 gulp.task('coffee', function() {
   return gulp.src(['./src/*.coffee'])
@@ -84,7 +83,7 @@ gulp.task('build', build = gulp.series('clean', 'sass', 'buildJS', function (don
 
 gulp.task('watchLinked', function(done){
   if(linkInfo.isLinked('parallelio')){
-    childProcess.spawn('npx', ['gulp','watch'], { cwd: linkInfo.baseFolder('parallelio'), stdio: 'inherit' })
+    linkInfo.exec('parallelio', ['gulp','watch'])
       .on('close', done);
   }else{
     done()
